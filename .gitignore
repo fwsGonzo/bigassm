@@ -1,0 +1,4 @@
+build/
+nim/
+fab
+test.bin
