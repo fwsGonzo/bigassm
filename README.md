@@ -20,6 +20,8 @@ The assembler currently does a one-pass through the assembly, and corrects forwa
 ## Example
 
 ```asm
+.org 0x100000
+
 .global _start
 _start:             ;; Entry point label
 	li sp, -16      ;; Stack at end of 128-bit
@@ -33,7 +35,7 @@ _start:             ;; Entry point label
 
 exit:
 	li a7, 1        ;; Syscall 1 (exit)
-	li a0, 0        ;; Code: 0
+	li a0, 0x666    ;; Exit code (1st arg)
 	scall           ;; Execute syscall
 	jmp exit
 

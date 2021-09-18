@@ -7,10 +7,17 @@ void Assembler::directive(const Token& token)
 	} else if (token.value == ".global") {
 		const auto& sym = next<TK_SYMBOL>();
 		(void) sym;
+	} else if (token.value == ".org") {
+		const auto& ba = next<TK_CONSTANT>();
+		if (!output.empty())
+			throw std::runtime_error("Cannot change base address when instructions already generated");
+		this->m_base_address = ba.u64;
+		printf("Base address: 0x%s\n", to_hex_string(m_base_address).c_str());
 	} else if (token.value == ".type") {
 		const auto& sym = next<TK_SYMBOL>();
 		const auto& cls = next<TK_SYMBOL>();
 		(void) sym;
+		(void) cls;
 	} else if (token.value == ".size") {
 		const auto& sym = next<TK_SYMBOL>();
 		const uint32_t size = current_address() - address_of(sym.value);

@@ -2,25 +2,6 @@
 #include "opcodes.hpp"
 #include <cassert>
 
-static size_t to_hex(char* buffer, size_t len, __uint128_t value)
-{
-	if (len < 32) return 0;
-	len = 8; /* At least print 8 hex digits */
-	static constexpr char lut[] = "0123456789ABCDEF";
-	for (unsigned i = 0; i < 16 - len / 2; i++) {
-		if ((value >> ((15-i) * 8)) & 0xFF) {
-			len = 32 - i * 2;
-			break;
-		}
-	}
-	const size_t max = len / 2;
-	for (unsigned i = 0; i < max; i++) {
-		buffer[i*2 + 0] = lut[(value >> ((max-1-i) * 8 + 4)) & 0xF];
-		buffer[i*2 + 1] = lut[(value >> ((max-1-i) * 8 + 0)) & 0xF];
-	}
-	return len;
-}
-
 void Assembler::assemble()
 {
 	assert((base_address() & 0xFFF) == 0);
@@ -33,10 +14,8 @@ void Assembler::assemble()
 			this->directive(token);
 			break;
 		case TK_LABEL: {
-			char buffer[32];
-			int len = to_hex(buffer, sizeof(buffer), current_address());
-			printf("Label %s at address 0x%.*s\n",
-				token.value.c_str(), len, buffer);
+			printf("Label %s at address 0x%s\n",
+				token.value.c_str(), to_hex_string(current_address()).c_str());
 			/* TODO: Check for duplicate labels */
 			this->add_symbol_here(token.value);
 			} break;

@@ -59,15 +59,16 @@ struct Assembler
 	[[noreturn]] void token_exception(const Token&, const std::string&) const;
 
 	Assembler(const Options& opt, const std::vector<Token>& t, std::vector<uint8_t>& out)
-		: options(opt), tokens(t), output(out) {}
+		: options(opt), tokens(t), output(out), m_base_address(options.base) {}
 
 	const Options& options;
 	const std::vector<Token>& tokens;
-	size_t index = 0;
 	std::vector<uint8_t>& output;
 
 private:
 	void finish_scheduled_work();
+	size_t index = 0;
+	address_t m_base_address;
 	std::unordered_map<std::string, address_t> lookup;
 	std::map<std::string, std::vector<scheduled_op_t>> m_schedule;
 };

@@ -29,7 +29,13 @@ Tokenizer::parse(const std::vector<RawToken>& raw_tokens)
 			tk.type = TK_STRING;
 			tk.value = word.substr(1, word.size() - 2);
 		} else if (is_number(word[0])) {
-			tk.i64 = atoi(word.c_str());
+			if (word.size() > 2 && word[1] == 'x') {
+				tk.u64 = std::stoul(&word[2], nullptr, 16);
+			} else if (word.size() > 2 && word[1] == 'b') {
+				tk.u64 = std::stoul(&word[2], nullptr, 2);
+			} else { // base 10
+				tk.i64 = atoi(word.c_str());
+			}
 			tk.type = TK_CONSTANT;
 			tk.value = word;
 		} else {

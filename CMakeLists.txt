@@ -13,6 +13,7 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra")
 set(SOURCES
 	src/assemble.cpp
 	src/directive.cpp
+	src/hex128.cpp
 	src/main.cpp
 	src/opcodes.cpp
 	src/registers.cpp

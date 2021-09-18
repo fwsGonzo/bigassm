@@ -4,6 +4,7 @@
 #include <vector>
 
 using address_t = __uint128_t;
+extern std::string to_hex_string(address_t);
 
 struct RawToken {
 	std::string name;
