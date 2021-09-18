@@ -5,7 +5,7 @@ I am maintaining a [RISC-V userspace emulator library](https://github.com/fwsGon
 
 Turns out, not too much work. The ISA is a bit unclear on some things, but I think I've got the gist of it. Unfortunately for me, I didn't have any way of using this .. very useful architecture. So naturally I had to write an assembler for it too.
 
-## rv128fab
+## Big assembler
 
 The assembler is in the early stages, but it supports the most basic instructions. Enough to assemble the test assembly in the root folder, for now. The assembler is easy to expand on, but it lacks helpful hints when things are not correct. It also lacks many limit checks that would produce erroneous assembly.
 
