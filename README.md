@@ -1,3 +1,4 @@
+
 # 128-bit RISC-V assembler
 
 RISC-V has a 128-bit ISA that is fairly developed, but not standardized fully yet.
@@ -11,7 +12,7 @@ The assembler is in the early stages, but it supports the most basic instruction
 
 It is written for C++17 (although currently does not use any fancy features, so should be C++11 compatible).
 
-Since there is no ELF format for 128-bit anything, it produces raw binaries. The assembler currently assumes that the program base is `0x100000`.
+Since there is no ELF format for 128-bit anything, it produces raw binaries.
 
 ## Simple one-pass
 
@@ -26,8 +27,8 @@ The assembler currently does a one-pass through the assembly, and corrects forwa
 _start:             ;; Entry point label
 	li sp, -16      ;; Stack at end of 128-bit
 
-	li a7, 2        ;; Syscall 2 (print)
-	sq a7, sp-0     ;; Store 128-bit value
+	li t0, 2        ;; Syscall 2 (print)
+	sq t0, sp-0     ;; Store 128-bit value
 	lq sp+0, a7     ;; Load 128-bit value
 
 	la a0, hello_world ;; address of string
@@ -45,3 +46,44 @@ hello_world:        ;; String label
 ```
 
 The store is pretty useless, but it shows how to do a SP-relative store.
+
+
+## Instructions and pseudo-instructions
+
+- my_label:
+	- Create a new label named 'my_label' which can be jumped to.
+- li [reg], constant
+	- Loads integer constant into register.
+- la [reg], label
+	- Loads address at label into register.
+- lq [reg], [reg]+offset
+	- Load 128-bit value from [reg]+offset memory address.
+- sq [reg]+offset, [reg]
+	- Store 128-bit value into [reg]+offset memory address.
+- jmp label
+	- Jump directly to label.
+- scall
+	- Perform system call from register A7. Arguments in A0-A6.
+- ebreak
+	- Debugger breakpoint.
+- wfi
+	- Wait for interrupts (stops the machine).
+
+## Pseudo-ops
+
+- db, dh, dw, dd, dq [constant]
+	- Insert aligned constant of 8-, 16-, 32-, 64- or 128-bits into current position.
+- resb, resh, resw, resd, resq [times]
+	- Reserve aligned 1, 2, 4, 8 or 16 bytes multiplied by constant.
+- incbin "file.name"
+	- Inserts binary data taken from filename at current position.
+
+## Directives
+
+- .org 0x1000
+	- Set the base address of the binary, which now starts at 0x1000.
+- .align 4
+	- Align memory to the given power-of-two.
+- .string "String here!"
+	- Insert a zero-terminated string.
+

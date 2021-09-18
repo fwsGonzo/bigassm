@@ -16,6 +16,7 @@ set(SOURCES
 	src/hex128.cpp
 	src/main.cpp
 	src/opcodes.cpp
+	src/pseudo_ops.cpp
 	src/registers.cpp
 	src/token.cpp
 	src/tokenizer.cpp

@@ -17,6 +17,7 @@ enum TokenType {
 	TK_STRING,
 	TK_SYMBOL,
 	TK_OPCODE,
+	TK_PSEUDOOP,
 	TK_REGISTER,
 	TK_CONSTANT,
 };
@@ -27,6 +28,8 @@ struct Register {
 
 struct Opcode;
 
+struct PseudoOp;
+
 struct Token {
 	std::string value;
 	enum TokenType type;
@@ -36,6 +39,7 @@ struct Token {
 		int64_t   i64;
 		uint64_t  u64;
 		const Opcode* opcode;
+		const PseudoOp* pseudoop;
 		char      raw[16];
 	};
 

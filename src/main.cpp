@@ -1,7 +1,7 @@
 #include "assembler.hpp"
 #include "tokenizer.hpp"
 #include <sstream>
-static std::string load_file(const std::string&);
+extern std::string load_file(const std::string&);
 static bool file_writer(const std::string&, const std::vector<uint8_t>&);
 static std::vector<RawToken> split(const std::string&);
 static constexpr bool VERBOSE_WORDS = false;

@@ -4,8 +4,18 @@
 _start:             ;; Entry point label
 	li sp, -16      ;; Stack at end of 128-bit
 
-	li a7, 2        ;; Syscall 2 (print)
-	sq a7, sp-0     ;; Store 128-bit value
+	li t1, 4096
+
+	li t1, 4097
+
+	li t1, -2049
+
+	li t1, 1024
+
+	li t1, 0x12345678
+
+	li t0, 2        ;; Syscall 2 (print)
+	sq t0, sp-0     ;; Store 128-bit value
 	lq sp+0, a7     ;; Load 128-bit value
 
 	la a0, hello_world ;; address of string

@@ -46,6 +46,14 @@ struct Assembler
 			output.resize(newsize);
 	}
 
+	void add_output(const void* vdata, size_t len) {
+		const char* data = (const char*)vdata;
+		output.insert(output.end(), data, data + len);
+	}
+	void allocate(size_t len) {
+		output.resize(output.size() + len);
+	}
+
 	bool symbol_is_known(const Token&) const;
 	address_t address_of(const Token&) const;
 	address_t address_of(const std::string&) const;

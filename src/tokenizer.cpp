@@ -3,6 +3,7 @@
 #include "registers.hpp"
 #include <cassert>
 #include <stdexcept>
+extern Token pseudo_op(const std::string&);
 
 static bool is_number(char c) {
 	return (c == '-' || c == '+' || (c >= '0' && c <= '9'));
@@ -41,8 +42,12 @@ Tokenizer::parse(const std::vector<RawToken>& raw_tokens)
 		} else {
 			tk = Opcodes::opcode(word);
 			// Try again with register
-			if (tk.is_symbol())
+			if (tk.is_symbol()) {
 				tk = Registers::to_reg(word);
+				// Try again with pseudo-op
+				if (tk.is_symbol())
+					tk = pseudo_op(word);
+			}
 		}
 		tokens.push_back(tk);
 	}

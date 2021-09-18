@@ -1,5 +1,6 @@
 #include "assembler.hpp"
 #include "opcodes.hpp"
+#include "pseudo_ops.hpp"
 #include <cassert>
 
 void Assembler::assemble()
@@ -23,9 +24,12 @@ void Assembler::assemble()
 				align(4);
 				auto il = token.opcode->handler(*this);
 				for (auto instr : il) {
-					output.insert(output.end(), instr.raw, instr.raw + instr.length());
+					add_output(instr.raw, instr.length());
 				}
 			} break;
+		case TK_PSEUDOOP:
+			token.pseudoop->handler(*this);
+			break;
 		case TK_STRING:
 		case TK_SYMBOL:
 		case TK_REGISTER:
