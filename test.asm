@@ -2,17 +2,9 @@
 
 .global _start
 _start:             ;; Entry point label
-	li sp, -16      ;; Stack at end of 128-bit
-
-	li t1, 4096
-
-	li t1, 4097
-
-	li t1, -2049
-
-	li t1, 1024
-
-	li t1, 0x12345678
+	li t0, -16      ;; Stack at end of 128-bit
+	xor sp, sp
+	add sp, t0
 
 	li t0, 2        ;; Syscall 2 (print)
 	sq t0, sp-0     ;; Store 128-bit value

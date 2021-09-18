@@ -100,6 +100,110 @@ static Opcode OP_JMP {
 	}
 };
 
+static Instruction op_imm_helper(Assembler& a, uint32_t funct3)
+{
+	auto& reg = a.next<TK_REGISTER> ();
+	Instruction instr(RV32I_OP_IMM);
+	if (a.next_is(TK_CONSTANT)) {
+		auto& imm = a.next<TK_CONSTANT> ();
+
+		instr.Itype.rd  = reg.i64;
+		instr.Itype.funct3 = funct3;
+		instr.Itype.rs1 = reg.i64;
+		instr.Itype.imm = imm.i64;
+	} else if (a.next_is(TK_REGISTER)) {
+		auto& reg2 = a.next<TK_REGISTER> ();
+
+		instr.Rtype.opcode = RV32I_OP;
+		instr.Rtype.rd  = reg.i64;
+		instr.Rtype.funct3 = funct3;
+		instr.Rtype.rs1 = reg.i64;
+		instr.Rtype.rs2 = reg2.i64;
+	} else {
+		a.token_exception(a.next(), "Unexpected token");
+	}
+	return instr;
+}
+static Instruction op_f7_helper(Assembler& a, uint32_t f3, uint32_t f7)
+{
+	auto& reg = a.next<TK_REGISTER> ();
+	auto& reg2 = a.next<TK_REGISTER> ();
+	Instruction instr(RV32I_OP);
+	instr.Rtype.rd  = reg.i64;
+	instr.Rtype.funct3 = f3;
+	instr.Rtype.rs1 = reg.i64;
+	instr.Rtype.rs2 = reg2.i64;
+	instr.Rtype.funct7 = f7;
+	return instr;
+}
+
+static Opcode OP_ADD {
+	.handler = [] (Assembler& a) -> InstructionList {
+		return {op_imm_helper(a, 0x0)};
+	}
+};
+static Opcode OP_SLL {
+	.handler = [] (Assembler& a) -> InstructionList {
+		return {op_imm_helper(a, 0x1)};
+	}
+};
+static Opcode OP_SLT {
+	.handler = [] (Assembler& a) -> InstructionList {
+		return {op_imm_helper(a, 0x2)};
+	}
+};
+static Opcode OP_SLTU {
+	.handler = [] (Assembler& a) -> InstructionList {
+		return {op_imm_helper(a, 0x3)};
+	}
+};
+static Opcode OP_SRL {
+	.handler = [] (Assembler& a) -> InstructionList {
+		return {op_imm_helper(a, 0x5)};
+	}
+};
+static Opcode OP_AND {
+	.handler = [] (Assembler& a) -> InstructionList {
+		return {op_imm_helper(a, 0x7)};
+	}
+};
+static Opcode OP_OR {
+	.handler = [] (Assembler& a) -> InstructionList {
+		return {op_imm_helper(a, 0x6)};
+	}
+};
+static Opcode OP_XOR {
+	.handler = [] (Assembler& a) -> InstructionList {
+		return {op_imm_helper(a, 0x4)};
+	}
+};
+
+static Opcode OP_MUL {
+	.handler = [] (Assembler& a) -> InstructionList {
+		return {op_f7_helper(a, 0x0, 0x1)};
+	}
+};
+static Opcode OP_DIV {
+	.handler = [] (Assembler& a) -> InstructionList {
+		return {op_f7_helper(a, 0x4, 0x1)};
+	}
+};
+static Opcode OP_DIVU {
+	.handler = [] (Assembler& a) -> InstructionList {
+		return {op_f7_helper(a, 0x5, 0x1)};
+	}
+};
+static Opcode OP_REM {
+	.handler = [] (Assembler& a) -> InstructionList {
+		return {op_f7_helper(a, 0x6, 0x1)};
+	}
+};
+static Opcode OP_REMU {
+	.handler = [] (Assembler& a) -> InstructionList {
+		return {op_f7_helper(a, 0x7, 0x1)};
+	}
+};
+
 static Opcode OP_SCALL {
 	.handler = [] (Assembler&) -> InstructionList {
 		Instruction instr(RV32I_SYSTEM);
@@ -127,7 +231,24 @@ static const std::unordered_map<std::string, Opcode> opcode_list =
 	{"la", OP_LA},
 	{"lq", OP_LQ},
 	{"sq", OP_SQ},
+
 	{"jmp", OP_JMP},
+
+	{"add", OP_ADD},
+	{"sll", OP_SLL},
+	{"slt", OP_SLT},
+	{"sltu", OP_SLTU},
+	{"srl", OP_SRL},
+	{"and", OP_AND},
+	{"or",  OP_OR},
+	{"xor", OP_XOR},
+
+	{"mul",  OP_MUL},
+	{"div",  OP_DIV},
+	{"divu", OP_DIVU},
+	{"rem",  OP_REM},
+	{"remu", OP_REMU},
+
 	{"scall",  OP_SCALL},
 	{"ebreak", OP_EBREAK},
 	{"wfi",    OP_WFI},
