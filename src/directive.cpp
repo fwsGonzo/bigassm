@@ -13,7 +13,7 @@ void Assembler::directive(const Token& token)
 		(void) sym;
 	} else if (token.value == ".size") {
 		const auto& sym = next<TK_SYMBOL>();
-		const uint32_t size = current_address() - address_of(sym);
+		const uint32_t size = current_address() - address_of(sym.value);
 		this->align(alignof(decltype(size)));
 		const auto* src = (const uint8_t *)&size;
 		output.insert(output.end(), src, src + sizeof(size));
@@ -26,12 +26,4 @@ void Assembler::directive(const Token& token)
 	} else {
 		fprintf(stderr, "Unknown directive: %s\n", token.value.c_str());
 	}
-}
-
-address_t Assembler::address_of(const Token& tk) const
-{
-	auto it = lookup.find(tk.value);
-	if (it != lookup.end()) return it->second;
-
-	token_exception(tk, "resolve symbol");
 }

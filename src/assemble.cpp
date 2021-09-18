@@ -56,11 +56,18 @@ void Assembler::assemble()
 			throw std::runtime_error("Unexpected token: " + token.to_string());
 		}
 	}
+
+	this->finish_scheduled_work();
 }
 
 Instruction& Assembler::instruction_at(address_t addr)
 {
 	return *(Instruction*)&output.at(addr - options.base);
+}
+
+Instruction& Assembler::instruction_at_offset(uint64_t off)
+{
+	return *(Instruction*)&output.at(off);
 }
 
 bool Assembler::symbol_is_known(const Token& tk) const
@@ -71,19 +78,34 @@ void Assembler::add_symbol_here(const std::string& name) {
 	lookup.emplace(std::piecewise_construct,
 		std::forward_as_tuple(name),
 		std::forward_as_tuple(current_address()));
-	auto it = m_schedule.find(name);
-	if (it != m_schedule.end())
-	{
-		printf("Found scheduled work for %s\n", name.c_str());
-		for (auto& op : it->second)
-			op(*this, current_address());
-	}
+}
+address_t Assembler::address_of(const std::string& name) const
+{
+	auto it = lookup.find(name);
+	if (it != lookup.end()) return it->second;
+
+	throw std::runtime_error("No such symbol: " + name);
+}
+address_t Assembler::address_of(const Token& tk) const
+{
+	auto it = lookup.find(tk.value);
+	if (it != lookup.end()) return it->second;
+
+	token_exception(tk, "resolve symbol");
 }
 
 void Assembler::schedule(const Token& tk, scheduled_op_t op)
 {
 	const auto& sym = tk.value;
 	m_schedule[sym].push_back(std::move(op));
+}
+void Assembler::finish_scheduled_work()
+{
+	for (auto& it : m_schedule) {
+		const auto address = address_of(it.first);
+		for (auto& op : it.second)
+			op(*this, address);
+	}
 }
 
 void Assembler::token_exception(const Token& tk, const std::string& info) const

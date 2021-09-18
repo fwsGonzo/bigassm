@@ -47,6 +47,12 @@ int main(int argc, char** argv)
 	printf("Written %zu bytes to %s\n", output.size(), outfile.c_str());
 }
 
+#define FLUSH_WORD() \
+	if (!word.empty()) {	\
+		tokens.push_back({word, line});	\
+		word.clear();	\
+	}
+
 std::vector<RawToken> split(const std::string& s)
 {
 	std::vector<RawToken> tokens;
@@ -76,15 +82,19 @@ std::vector<RawToken> split(const std::string& s)
 		case ';':
 			begin_comment = true;
 			continue;
+		case '+':
+		case '-':
+		case '*':
+			/* This allows building constant chains */
+			FLUSH_WORD();
+			word.append(1, c);
+			break;
 		case ',':
 		case ' ':
 		case '\t':
 		case '\n':
 		case '\r':
-			if (!word.empty()) {
-				tokens.push_back({word, line});
-				word.clear();
-			}
+			FLUSH_WORD();
 			if (c == '\n') line++;
 			break;
 		case '"':

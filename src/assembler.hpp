@@ -27,10 +27,15 @@ struct Assembler
 		}
 		return tk;
 	}
+	bool next_is(TokenType tt) const {
+		if (done()) return false;
+		return tokens.at(index).type == tt;
+	}
 	bool needs(size_t args) const noexcept { return index + args <= tokens.size(); }
 	bool done() const noexcept { return index >= tokens.size(); }
 
 	address_t base_address() const noexcept { return options.base; }
+	address_t current_offset() const noexcept { return output.size(); }
 	address_t current_address() const noexcept { return base_address() + output.size(); }
 	bool is_aligned(size_t alignment) {
 		return (output.size() & (alignment-1)) == 0;
@@ -43,11 +48,13 @@ struct Assembler
 
 	bool symbol_is_known(const Token&) const;
 	address_t address_of(const Token&) const;
+	address_t address_of(const std::string&) const;
 	void schedule(const Token&, scheduled_op_t);
 
 	void add_symbol_here(const std::string& name);
 
 	Instruction& instruction_at(address_t);
+	Instruction& instruction_at_offset(size_t);
 
 	[[noreturn]] void token_exception(const Token&, const std::string&) const;
 
@@ -60,6 +67,7 @@ struct Assembler
 	std::vector<uint8_t>& output;
 
 private:
+	void finish_scheduled_work();
 	std::unordered_map<std::string, address_t> lookup;
 	std::map<std::string, std::vector<scheduled_op_t>> m_schedule;
 };
