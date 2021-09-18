@@ -23,7 +23,7 @@ void Assembler::assemble()
 				align(4);
 				auto il = token.opcode->handler(*this);
 				for (auto instr : il) {
-					output.insert(output.end(), instr.raw, instr.raw + instr.size());
+					output.insert(output.end(), instr.raw, instr.raw + instr.length());
 				}
 			} break;
 		case TK_STRING:

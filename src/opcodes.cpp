@@ -4,12 +4,26 @@
 
 static Opcode OP_LI {
 	.handler = [] (Assembler& a) -> InstructionList {
-		Instruction instr(RV32I_OP_IMM);
+		InstructionList res;
 		auto& reg = a.next<TK_REGISTER> ();
 		auto& off = a.next<TK_CONSTANT> ();
-		instr.Itype.rd = reg.i64;
-		instr.Itype.imm = off.i64;
-		return {instr};
+
+		Instruction i1(RV32I_OP_IMM);
+		i1.Itype.rd = reg.i64;
+		i1.Itype.imm = off.i64;
+		/* If the constant is large, we can turn the
+		   LI into ADDI combined with LUI. */
+		if (off.i64 > 0x7FF || off.i64 < -2048)
+		{
+			i1.Itype.rs1 = reg.i64;
+			Instruction i2(RV32I_LUI);
+			i2.Utype.rd = reg.i64;
+			i2.Utype.imm = off.i64 >> 12;
+			res.push_back(i2);
+		}
+		if (off.i64 & 0x7FF)
+			res.push_back(i1);
+		return res;
 	}
 };
 
