@@ -6,12 +6,7 @@ _start:             ;; Entry point label
 	xor sp, sp
 	add sp, t0
 
-	li t0, 2        ;; Syscall 2 (print)
-	sq t0, sp-0     ;; Store 128-bit value
-	lq sp+0, a7     ;; Load 128-bit value
-
-	la a0, hello_world ;; address of string
-	scall           ;; Execute syscall
+	call my_function
 
 exit:
 	li a7, 1        ;; Syscall 1 (exit)
@@ -22,3 +17,19 @@ exit:
 hello_world:        ;; String label
 	.type hello_world, @object
 	.string "Hello World!" ;; Zt-string
+
+.align 4 ;; BUG work-around
+my_function:
+	add sp, -32
+	sq a0, sp+0
+
+	li t0, 2        ;; Syscall 2 (print)
+	sq t0, sp+16    ;; Store 128-bit value
+	lq sp+16, a7    ;; Load 128-bit value
+
+	la a0, hello_world ;; address of string
+	scall           ;; Execute syscall
+
+	lq sp+0, a0
+
+	ret

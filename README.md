@@ -60,6 +60,10 @@ The store is pretty useless, but it shows how to do a SP-relative store.
 	- Load 128-bit value from [reg]+offset memory address.
 - sq [reg]+offset, [reg]
 	- Store 128-bit value into [reg]+offset memory address.
+- call label
+	- Make a function call to 'label' which can be returned from.
+- ret
+	- Return back from function call.
 - jmp label
 	- Jump directly to label.
 - scall

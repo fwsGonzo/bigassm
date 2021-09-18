@@ -32,7 +32,7 @@ static Opcode OP_LA {
 	{
 		auto& reg = a.next<TK_REGISTER> ();
 		auto& lbl = a.next<TK_SYMBOL> ();
-		Instruction i1(RV32I_AUIPC);
+		Instruction i1(RV32I_LUI);
 		i1.Itype.rd = reg.i64;
 		Instruction i2(RV32I_OP_IMM);
 		i2.Itype.rd = reg.i64;
@@ -42,7 +42,6 @@ static Opcode OP_LA {
 		[iaddr = a.current_address()] (Assembler& a, address_t addr) {
 			auto& i1 = a.instruction_at(iaddr + 0);
 			auto& i2 = a.instruction_at(iaddr + 4);
-			addr -= iaddr;
 			i1.Utype.imm = addr >> 12;
 			i2.Itype.imm = addr & 0xFFF;
 		});
@@ -83,6 +82,30 @@ static Opcode OP_SQ {
 	}
 };
 
+static Opcode OP_CALL {
+	.handler = [] (Assembler& a) -> InstructionList {
+		auto& lbl = a.next<TK_SYMBOL> ();
+		Instruction instr(RV32I_JAL);
+		instr.Jtype.rd = 1; /* Return address */
+		a.schedule(lbl,
+		[iaddr = a.current_address()] (Assembler& a, address_t addr) {
+			auto& instr = a.instruction_at(iaddr);
+			const int32_t diff = addr - iaddr;
+			instr.Jtype.imm3 = diff >> 1;
+			instr.Jtype.imm2 = diff >> 11;
+			instr.Jtype.imm1 = diff >> 12;
+			instr.Jtype.imm4 = diff >> 19;
+		});
+		return {instr};
+	}
+};
+static Opcode OP_RET {
+	.handler = [] (Assembler& a) -> InstructionList {
+		Instruction instr(RV32I_JALR);
+		instr.Itype.rs1 = 1;
+		return {instr};
+	}
+};
 static Opcode OP_JMP {
 	.handler = [] (Assembler& a) -> InstructionList {
 		auto& lbl = a.next<TK_SYMBOL> ();
@@ -232,6 +255,8 @@ static const std::unordered_map<std::string, Opcode> opcode_list =
 	{"lq", OP_LQ},
 	{"sq", OP_SQ},
 
+	{"call", OP_CALL},
+	{"ret", OP_RET},
 	{"jmp", OP_JMP},
 
 	{"add", OP_ADD},
