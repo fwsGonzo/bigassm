@@ -319,7 +319,7 @@ static Opcode OP_REMU {
 	}
 };
 
-static Opcode OP_SCALL {
+static Opcode OP_ECALL {
 	.handler = [] (Assembler&) -> InstructionList {
 		Instruction instr(RV32I_SYSTEM);
 		return {instr};
@@ -387,7 +387,8 @@ static const std::unordered_map<std::string, Opcode> opcode_list =
 	{"rem",  OP_REM},
 	{"remu", OP_REMU},
 
-	{"scall",  OP_SCALL},
+	{"syscall",OP_ECALL},
+	{"ecall",  OP_ECALL},
 	{"ebreak", OP_EBREAK},
 	{"wfi",    OP_WFI},
 	{"system", OP_SYSTEM},

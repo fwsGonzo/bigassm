@@ -32,12 +32,12 @@ _start:             ;; Entry point label
 	lq sp+0, a7     ;; Load 128-bit value
 
 	la a0, hello_world ;; address of string
-	scall           ;; Execute syscall
+	ecall           ;; Execute syscall
 
 exit:
 	li a7, 1        ;; Syscall 1 (exit)
 	li a0, 0x666    ;; Exit code (1st arg)
-	scall           ;; Execute syscall
+	ecall           ;; Execute syscall
 	jmp exit
 
 hello_world:        ;; String label

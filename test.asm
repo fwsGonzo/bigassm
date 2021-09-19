@@ -18,7 +18,7 @@ repeat:
 exit:
 	li a7, 1        ;; Syscall 1 (exit)
 	li a0, 0x666    ;; Exit code (1st arg)
-	scall           ;; Execute syscall
+	ecall           ;; Execute syscall
 	jmp exit        ;; Loop exit to prevent problems
 
 hello_world:        ;; String label
@@ -34,7 +34,7 @@ my_function:
 	lq sp+16, a7    ;; Load 128-bit value
 
 	la a0, hello_world ;; address of string
-	scall           ;; Execute syscall
+	ecall           ;; Execute syscall
 
 	lq sp+0, a0
 
