@@ -26,7 +26,7 @@ void Assembler::directive(const Token& token)
 		output.insert(output.end(), src, src + sizeof(size));
 	} else if (token.value == ".string") {
 		const auto& str = next<TK_STRING>();
-		add_symbol_here(str.value);
+		this->align_with_labels(0);
 		/* We want the zero-termination */
 		output.insert(output.end(),
 			str.value.data(), str.value.data() + str.value.size()+1);

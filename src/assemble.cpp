@@ -14,14 +14,11 @@ void Assembler::assemble()
 		case TK_DIRECTIVE:
 			this->directive(token);
 			break;
-		case TK_LABEL: {
-			printf("Label %s at address 0x%s\n",
-				token.value.c_str(), to_hex_string(current_address()).c_str());
-			/* TODO: Check for duplicate labels */
-			this->add_symbol_here(token.value);
-			} break;
+		case TK_LABEL:
+			add_label_soon(token.value);
+			break;
 		case TK_OPCODE: {
-				align(4);
+				align_with_labels(4);
 				auto il = token.opcode->handler(*this);
 				for (auto instr : il) {
 					add_output(instr.raw, instr.length());
@@ -51,6 +48,31 @@ Instruction& Assembler::instruction_at(address_t addr)
 Instruction& Assembler::instruction_at_offset(uint64_t off)
 {
 	return *(Instruction*)&output.at(off);
+}
+
+void Assembler::add_output(const void* vdata, size_t len) {
+	const char* data = (const char*)vdata;
+	output.insert(output.end(), data, data + len);
+}
+void Assembler::allocate(size_t len) {
+	output.resize(output.size() + len);
+}
+void Assembler::align_with_labels(size_t alignment)
+{
+	if (alignment > 1)
+		this->align(alignment);
+	for (const auto& name : m_label_queue)
+		add_label_here(name);
+	m_label_queue.clear();
+}
+void Assembler::add_label_soon(const std::string& name) {
+	m_label_queue.push_back(name);
+}
+void Assembler::add_label_here(const std::string& name) {
+	printf("Label %s at address 0x%s\n",
+		name.c_str(), to_hex_string(current_address()).c_str());
+	/* TODO: Check for duplicate labels */
+	this->add_symbol_here(name);
 }
 
 bool Assembler::symbol_is_known(const Token& tk) const

@@ -8,21 +8,21 @@ static PseudoOp DATA_128 {
 	.handler = [] (Assembler& a) {
 		auto& constant = a.next<TK_CONSTANT> ();
 		__uint128_t value = constant.u64;
-		a.align(16);
+		a.align_with_labels(16);
 		a.add_output(&value, sizeof(value));
 	}
 };
 static PseudoOp DATA_64 {
 	.handler = [] (Assembler& a) {
 		auto& constant = a.next<TK_CONSTANT> ();
-		a.align(8);
+		a.align_with_labels(8);
 		a.add_output(&constant.u64, sizeof(uint64_t));
 	}
 };
 static PseudoOp DATA_32 {
 	.handler = [] (Assembler& a) {
 		auto& constant = a.next<TK_CONSTANT> ();
-		a.align(4);
+		a.align_with_labels(4);
 		uint32_t value = constant.u64;
 		a.add_output(&value, sizeof(value));
 	}
@@ -30,7 +30,7 @@ static PseudoOp DATA_32 {
 static PseudoOp DATA_16 {
 	.handler = [] (Assembler& a) {
 		auto& constant = a.next<TK_CONSTANT> ();
-		a.align(2);
+		a.align_with_labels(2);
 		uint16_t value = constant.u64;
 		a.add_output(&value, sizeof(value));
 	}
@@ -52,28 +52,28 @@ static PseudoOp RESV_8 {
 static PseudoOp RESV_16 {
 	.handler = [] (Assembler& a) {
 		auto& times = a.next<TK_CONSTANT> ();
-		a.align(2);
+		a.align_with_labels(2);
 		a.allocate(times.u64 * sizeof(uint16_t));
 	}
 };
 static PseudoOp RESV_32 {
 	.handler = [] (Assembler& a) {
 		auto& times = a.next<TK_CONSTANT> ();
-		a.align(4);
+		a.align_with_labels(4);
 		a.allocate(times.u64 * sizeof(uint32_t));
 	}
 };
 static PseudoOp RESV_64 {
 	.handler = [] (Assembler& a) {
 		auto& times = a.next<TK_CONSTANT> ();
-		a.align(8);
+		a.align_with_labels(8);
 		a.allocate(times.u64 * sizeof(uint64_t));
 	}
 };
 static PseudoOp RESV_128 {
 	.handler = [] (Assembler& a) {
 		auto& times = a.next<TK_CONSTANT> ();
-		a.align(16);
+		a.align_with_labels(16);
 		a.allocate(times.u64 * sizeof(__uint128_t));
 	}
 };

@@ -18,7 +18,6 @@ hello_world:        ;; String label
 	.type hello_world, @object
 	.string "Hello World!" ;; Zt-string
 
-.align 4 ;; BUG work-around
 my_function:
 	add sp, -32
 	sq a0, sp+0

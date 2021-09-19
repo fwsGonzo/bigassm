@@ -40,19 +40,15 @@ struct Assembler
 	bool is_aligned(size_t alignment) {
 		return (output.size() & (alignment-1)) == 0;
 	}
+	void align_with_labels(size_t alignment);
 	void align(size_t alignment) {
 		size_t newsize = (output.size() + (alignment-1)) & ~(alignment-1);
 		if (output.size() != newsize)
 			output.resize(newsize);
 	}
 
-	void add_output(const void* vdata, size_t len) {
-		const char* data = (const char*)vdata;
-		output.insert(output.end(), data, data + len);
-	}
-	void allocate(size_t len) {
-		output.resize(output.size() + len);
-	}
+	void add_output(const void* vdata, size_t len);
+	void allocate(size_t len);
 
 	bool symbol_is_known(const Token&) const;
 	address_t address_of(const Token&) const;
@@ -60,6 +56,8 @@ struct Assembler
 	void schedule(const Token&, scheduled_op_t);
 
 	void add_symbol_here(const std::string& name);
+	void add_label_soon(const std::string& name);
+	void add_label_here(const std::string& name);
 
 	Instruction& instruction_at(address_t);
 	Instruction& instruction_at_offset(size_t);
@@ -77,6 +75,7 @@ private:
 	void finish_scheduled_work();
 	size_t index = 0;
 	address_t m_base_address;
+	std::vector<std::string> m_label_queue;
 	std::unordered_map<std::string, address_t> lookup;
 	std::map<std::string, std::vector<scheduled_op_t>> m_schedule;
 };
