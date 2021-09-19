@@ -1,11 +1,13 @@
 #include "assembler.hpp"
 #include "tokenizer.hpp"
+#include "elf128.h"
 #include <sstream>
 extern std::string load_file(const std::string&);
 static bool file_writer(const std::string&, const std::vector<uint8_t>&);
 static std::vector<RawToken> split(const std::string&);
 static constexpr bool VERBOSE_WORDS = false;
 static constexpr bool VERBOSE_TOKENS = false;
+static constexpr bool USE_ELF128 = true;
 
 int main(int argc, char** argv)
 {
@@ -43,8 +45,52 @@ int main(int argc, char** argv)
 	Assembler assembler(options, tokens, output);
 	assembler.assemble();
 
-	file_writer(outfile, output);
-	printf("Written %zu bytes to %s\n", output.size(), outfile.c_str());
+	if constexpr (USE_ELF128) {
+		std::vector<uint8_t> elfbin;
+		struct ElfData {
+			Elf128_Ehdr hdr;
+			Elf128_Phdr phdr[1];
+		};
+		elfbin.reserve(sizeof(ElfData) + output.size());
+		elfbin.resize(sizeof(ElfData));
+		auto* elfdata = (ElfData*) elfbin.data();
+		auto& elf = elfdata->hdr;
+		elf.e_ident[EI_MAG0] = ELFMAG0;
+		elf.e_ident[EI_MAG1] = ELFMAG1;
+		elf.e_ident[EI_MAG2] = ELFMAG2;
+		elf.e_ident[EI_MAG3] = ELFMAG3;
+		elf.e_ident[EI_CLASS] = ELFCLASS128;
+		elf.e_ident[EI_DATA] = ELFDATA2LSB;
+		elf.e_ident[EI_VERSION] = EV_CURRENT;
+		elf.e_ident[EI_OSABI] = ELFOSABI_STANDALONE;
+		elf.e_type = ET_EXEC;
+		elf.e_machine = EM_RISCV;
+		elf.e_version = EV_CURRENT;
+		elf.e_entry = assembler.address_of("_start");
+		elf.e_phoff = offsetof(ElfData, phdr);
+		elf.e_shoff = 0;
+		elf.e_ehsize = sizeof(Elf128_Ehdr);
+		elf.e_phentsize = sizeof(Elf128_Phdr);
+		elf.e_phnum = 1;
+		elf.e_shentsize = sizeof(Elf128_Shdr);
+		elf.e_shnum = 0;
+		elf.e_shstrndx = SHN_UNDEF;
+		auto& program = elfdata->phdr[0];
+		program.p_type = PT_LOAD;
+		program.p_flags = PF_R | PF_W | PF_X;
+		program.p_offset = sizeof(ElfData);
+		program.p_vaddr = assembler.base_address();
+		program.p_paddr = assembler.base_address();
+		program.p_filesz = output.size();
+		program.p_memsz = output.size();
+		program.p_align = 0x10;
+		elfbin.insert(elfbin.end(), output.begin(), output.end());
+		file_writer(outfile, elfbin);
+		printf("Written %zu bytes to %s\n", elfbin.size(), outfile.c_str());
+	} else {
+		file_writer(outfile, output);
+		printf("Written %zu bytes to %s\n", output.size(), outfile.c_str());
+	}
 }
 
 #define FLUSH_WORD() \

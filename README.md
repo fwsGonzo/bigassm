@@ -12,7 +12,7 @@ The assembler is in the early stages, but it supports the most basic instruction
 
 It is written for C++17 (although currently does not use any fancy features, so should be C++11 compatible).
 
-Since there is no ELF format for 128-bit anything, it produces raw binaries.
+While there is no ELF format for 128-bit anything, this assembler outputs an ELFCLASS128 file that uses a could-be 128-bit ELF format. It is loadable by libriscv.
 
 ## Simple one-pass
 

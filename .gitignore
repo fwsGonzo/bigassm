@@ -2,3 +2,4 @@ build/
 nim/
 fab
 test.bin
+test.elf
