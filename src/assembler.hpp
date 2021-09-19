@@ -34,7 +34,7 @@ struct Assembler
 	bool needs(size_t args) const noexcept { return index + args <= tokens.size(); }
 	bool done() const noexcept { return index >= tokens.size(); }
 
-	address_t base_address() const noexcept { return options.base; }
+	address_t base_address() const noexcept { return m_base_address; }
 	address_t current_offset() const noexcept { return output.size(); }
 	address_t current_address() const noexcept { return base_address() + output.size(); }
 	bool is_aligned(size_t alignment) {

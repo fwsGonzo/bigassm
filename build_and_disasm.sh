@@ -5,4 +5,4 @@ pushd build
 ninja
 popd
 ./build/fab128 test.asm test.elf
-riscv64-linux-gnu-objdump -b binary -m riscv -EL -D test.elf
+riscv64-linux-gnu-objdump -b binary -m riscv -EL -D test.elf.bin

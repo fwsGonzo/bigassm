@@ -45,7 +45,7 @@ void Assembler::assemble()
 
 Instruction& Assembler::instruction_at(address_t addr)
 {
-	return *(Instruction*)&output.at(addr - options.base);
+	return *(Instruction*)&output.at(addr - base_address());
 }
 
 Instruction& Assembler::instruction_at_offset(uint64_t off)

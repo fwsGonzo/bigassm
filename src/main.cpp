@@ -87,10 +87,10 @@ int main(int argc, char** argv)
 		elfbin.insert(elfbin.end(), output.begin(), output.end());
 		file_writer(outfile, elfbin);
 		printf("Written %zu bytes to %s\n", elfbin.size(), outfile.c_str());
-	} else {
-		file_writer(outfile, output);
-		printf("Written %zu bytes to %s\n", output.size(), outfile.c_str());
 	}
+	const std::string binfile = outfile + ".bin";
+	file_writer(binfile, output);
+	printf("Written %zu bytes to %s\n", output.size(), binfile.c_str());
 }
 
 #define FLUSH_WORD() \
