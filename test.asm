@@ -8,18 +8,18 @@ _start:             ;; Entry point label
 
 	li  s0, 4
 	xor s1, s1
-
 repeat:
 	add s0, -1
 	bne s0, s1, repeat
 
-	call my_function
+	call my_function ;; A regular function call
+	;; We return here after the function ends.
 
 exit:
 	li a7, 1        ;; Syscall 1 (exit)
 	li a0, 0x666    ;; Exit code (1st arg)
 	scall           ;; Execute syscall
-	jmp exit
+	jmp exit        ;; Loop exit to prevent problems
 
 hello_world:        ;; String label
 	.type hello_world, @object

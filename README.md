@@ -12,7 +12,7 @@ The assembler is in the early stages, but it supports the most basic instruction
 
 It is written for C++17 (although currently does not use any fancy features, so should be C++11 compatible).
 
-While there is no ELF format for 128-bit anything, this assembler outputs an [ELFCLASS128](src/elf128.h) file that is a could-be 128-bit ELF format. It is loadable by libriscv.
+While there is no ELF format for 128-bit anything, this assembler outputs an [ELFCLASS128](src/elf128.h) file that is a could-be 128-bit ELF format. It is loadable by libriscv, specifically the [emu128 emulator project](https://github.com/fwsGonzo/libriscv/tree/master/emulator/emu128).
 
 ## Simple one-pass
 
@@ -62,8 +62,10 @@ The store is pretty useless, but it shows how to do a SP-relative store.
 	- Store 128-bit value into [reg]+offset memory address.
 - call label
 	- Make a _function call_ to 'label' which can be returned from.
+- farcall [reg], label
+	- Make a _function call_ to a far away 'label' which can be returned from. [reg] is used to build the full address.
 - ret
-	- Return back from _function call_.
+	- Return back from any _function call_.
 - jmp label
 	- Jump directly to label.
 - scall

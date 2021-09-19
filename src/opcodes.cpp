@@ -21,6 +21,7 @@ static Opcode OP_LI {
 			i2.Utype.imm = off.i64 >> 12;
 			res.push_back(i2);
 		}
+		/* Slight optimization to avoid ADDI */
 		if (off.i64 & 0x7FF)
 			res.push_back(i1);
 		return res;
@@ -133,6 +134,27 @@ static Opcode OP_BGEU {
 	}
 };
 
+static Opcode OP_FARCALL {
+	.handler = [] (Assembler& a) -> InstructionList {
+		auto& reg = a.next<TK_REGISTER> ();
+		auto& lbl = a.next<TK_SYMBOL> ();
+
+		Instruction i1(RV32I_LUI);
+		i1.Utype.rd = reg.i64;
+		Instruction i2(RV32I_JALR);
+		i2.Itype.rs1 = reg.i64;
+		i2.Itype.rd  = 1; /* Return address */
+
+		a.schedule(lbl,
+		[iaddr = a.current_address()] (Assembler& a, address_t addr) {
+			auto& i1 = a.instruction_at(iaddr + 0);
+			auto& i2 = a.instruction_at(iaddr + 4);
+			i1.Utype.imm = addr >> 12;
+			i2.Itype.imm = addr;
+		});
+		return {i1, i2};
+	}
+};
 static Opcode OP_CALL {
 	.handler = [] (Assembler& a) -> InstructionList {
 		auto& lbl = a.next<TK_SYMBOL> ();
@@ -332,6 +354,7 @@ static const std::unordered_map<std::string, Opcode> opcode_list =
 	{"bltu", OP_BLTU},
 	{"bgeu", OP_BGEU},
 
+	{"farcall", OP_FARCALL},
 	{"call", OP_CALL},
 	{"jal", OP_CALL},
 	{"jalr", OP_JALR},
