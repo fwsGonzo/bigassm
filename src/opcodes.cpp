@@ -129,6 +129,8 @@ static Instruction op_imm_helper(Assembler& a, uint32_t funct3)
 	Instruction instr(RV32I_OP_IMM);
 	if (a.next_is(TK_CONSTANT)) {
 		auto& imm = a.next<TK_CONSTANT> ();
+		if (imm.i64 > 0x7FF || imm.i64 < -2048)
+			a.token_exception(imm, "Out of bounds immediate value");
 
 		instr.Itype.rd  = reg.i64;
 		instr.Itype.funct3 = funct3;

@@ -115,7 +115,7 @@ void Assembler::finish_scheduled_work()
 
 void Assembler::token_exception(const Token& tk, const std::string& info) const
 {
-	fprintf(stderr, "Wrong token on line %u. Info: %s\n", tk.line, info.c_str());
-	throw std::runtime_error("Wrong token type: " + tk.to_string());
+	fprintf(stderr, "Problematic token on line %u. Info: %s\n", tk.line, info.c_str());
+	throw std::runtime_error("Token: " + tk.to_string());
 
 }
