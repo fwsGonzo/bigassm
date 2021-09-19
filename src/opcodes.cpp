@@ -339,6 +339,16 @@ static Opcode OP_WFI {
 		return {instr};
 	}
 };
+static Opcode OP_SYSTEM {
+	.handler = [] (Assembler& a) -> InstructionList {
+		auto& f3  = a.next<TK_CONSTANT> ();
+		auto& imm = a.next<TK_CONSTANT> ();
+		Instruction instr(RV32I_SYSTEM);
+		instr.Itype.funct3 = f3.i64;
+		instr.Itype.imm = imm.i64;
+		return {instr};
+	}
+};
 
 static const std::unordered_map<std::string, Opcode> opcode_list =
 {
@@ -380,6 +390,7 @@ static const std::unordered_map<std::string, Opcode> opcode_list =
 	{"scall",  OP_SCALL},
 	{"ebreak", OP_EBREAK},
 	{"wfi",    OP_WFI},
+	{"system", OP_SYSTEM},
 };
 
 Token Opcodes::opcode(const std::string& value)
