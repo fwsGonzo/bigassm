@@ -12,7 +12,7 @@ The assembler is in the early stages, but it supports the most basic instruction
 
 It is written for C++17 (although currently does not use any fancy features, so should be C++11 compatible).
 
-While there is no ELF format for 128-bit anything, this assembler outputs an ELFCLASS128 file that uses a could-be 128-bit ELF format. It is loadable by libriscv.
+While there is no ELF format for 128-bit anything, this assembler outputs an [ELFCLASS128](src/elf128.h) file that is a could-be 128-bit ELF format. It is loadable by libriscv.
 
 ## Simple one-pass
 
@@ -61,9 +61,9 @@ The store is pretty useless, but it shows how to do a SP-relative store.
 - sq [reg]+offset, [reg]
 	- Store 128-bit value into [reg]+offset memory address.
 - call label
-	- Make a function call to 'label' which can be returned from.
+	- Make a _function call_ to 'label' which can be returned from.
 - ret
-	- Return back from function call.
+	- Return back from _function call_.
 - jmp label
 	- Jump directly to label.
 - scall
@@ -72,6 +72,15 @@ The store is pretty useless, but it shows how to do a SP-relative store.
 	- Debugger breakpoint.
 - wfi
 	- Wait for interrupts (stops the machine).
+
+Arithmetic and logical operations:
+
+- add, sll, slt, sltu, srl, and, or, xor [reg] [reg _or_ imm]
+	- Operation on register with register or immediate.
+
+- mul, div, divu, rem, remu [reg] [reg]
+	- Multiplication, division, unsigned division, remainder, unsigned remainder.
+	- Operation on register with register.
 
 ## Pseudo-ops
 
@@ -84,8 +93,8 @@ The store is pretty useless, but it shows how to do a SP-relative store.
 
 ## Directives
 
-- .org 0x1000
-	- Set the base address of the binary, which now starts at 0x1000.
+- .org 0x10000
+	- Set the base address of the binary, which now starts at 0x10000.
 - .align 4
 	- Align memory to the given power-of-two.
 - .string "String here!"
