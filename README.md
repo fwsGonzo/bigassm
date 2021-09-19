@@ -99,6 +99,8 @@ Arithmetic and logical operations:
 	- Subtraction, multiplication, division, unsigned division, remainder, unsigned remainder.
 	- Operation on register with register.
 
+Complete [list of available instructions](src/opcodes.cpp).
+
 ## Pseudo-ops
 
 - db, dh, dw, dd, dq [constant]
@@ -107,6 +109,8 @@ Arithmetic and logical operations:
 	- Reserve aligned 1, 2, 4, 8 or 16 bytes multiplied by constant.
 - incbin "file.name"
 	- Inserts binary data taken from filename at current position.
+
+Complete [list of available pseudo-ops](src/pseudo_ops.cpp).
 
 ## Directives
 
@@ -117,3 +121,4 @@ Arithmetic and logical operations:
 - .string "String here!"
 	- Insert a zero-terminated string.
 
+Complete [list of available directives](src/directive.cpp).
