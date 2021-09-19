@@ -73,13 +73,28 @@ The store is pretty useless, but it shows how to do a SP-relative store.
 - wfi
 	- Wait for interrupts (stops the machine).
 
+Branches:
+
+- beq [r1] [r2] label
+	- Jump when r1 and r2 is equal.
+- bne [r1] [r2] label
+	- Jump when r1 and r2 is _not_ equal.
+- blt [r1] [r2] label
+	- Jump when r1 is less than to r2.
+- bge [r1] [r2] label
+	- Jump when r1 is greater or equal to r2.
+- bltu [r1] [r2] label
+	- Jump when _unsigned_ r1 is less than _unsigned_ r2.
+- bgeu [r1] [r2] label
+	- Jump when _unsigned_ r1 is greater or equal to _unsigned_ r2.
+
 Arithmetic and logical operations:
 
 - add, sll, slt, sltu, srl, and, or, xor [reg] [reg _or_ imm]
 	- Operation on register with register or immediate.
 
-- mul, div, divu, rem, remu [reg] [reg]
-	- Multiplication, division, unsigned division, remainder, unsigned remainder.
+- sub, mul, div, divu, rem, remu [reg] [reg]
+	- Subtraction, multiplication, division, unsigned division, remainder, unsigned remainder.
 	- Operation on register with register.
 
 ## Pseudo-ops

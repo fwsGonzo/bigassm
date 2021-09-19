@@ -6,6 +6,13 @@ _start:             ;; Entry point label
 	xor sp, sp
 	add sp, t0
 
+	li  s0, 4
+	xor s1, s1
+
+repeat:
+	add s0, -1
+	bne s0, s1, repeat
+
 	call my_function
 
 exit:

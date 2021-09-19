@@ -82,6 +82,57 @@ static Opcode OP_SQ {
 	}
 };
 
+static InstructionList branch_helper(Assembler& a, uint32_t f3)
+{
+	auto& reg1 = a.next<TK_REGISTER> ();
+	auto& reg2 = a.next<TK_REGISTER> ();
+	auto& lbl = a.next<TK_SYMBOL> ();
+	Instruction instr(RV32I_BRANCH);
+	instr.Btype.rs1 = reg1.i64;
+	instr.Btype.rs2 = reg2.i64;
+	instr.Btype.funct3 = f3;
+	a.schedule(lbl,
+	[iaddr = a.current_address()] (Assembler& a, address_t addr) {
+		auto& instr = a.instruction_at(iaddr);
+		const int32_t diff = addr - iaddr;
+		instr.Btype.imm2 = diff >> 1;
+		instr.Btype.imm3 = diff >> 5;
+		instr.Btype.imm1 = diff >> 11;
+		instr.Btype.imm4 = diff >> 12;
+	});
+	return {instr};
+}
+static Opcode OP_BEQ {
+	.handler = [] (Assembler& a) -> InstructionList {
+		return {branch_helper(a, 0x0)};
+	}
+};
+static Opcode OP_BNE {
+	.handler = [] (Assembler& a) -> InstructionList {
+		return {branch_helper(a, 0x1)};
+	}
+};
+static Opcode OP_BLT {
+	.handler = [] (Assembler& a) -> InstructionList {
+		return {branch_helper(a, 0x4)};
+	}
+};
+static Opcode OP_BGE {
+	.handler = [] (Assembler& a) -> InstructionList {
+		return {branch_helper(a, 0x5)};
+	}
+};
+static Opcode OP_BLTU {
+	.handler = [] (Assembler& a) -> InstructionList {
+		return {branch_helper(a, 0x6)};
+	}
+};
+static Opcode OP_BGEU {
+	.handler = [] (Assembler& a) -> InstructionList {
+		return {branch_helper(a, 0x7)};
+	}
+};
+
 static Opcode OP_CALL {
 	.handler = [] (Assembler& a) -> InstructionList {
 		auto& lbl = a.next<TK_SYMBOL> ();
@@ -99,8 +150,20 @@ static Opcode OP_CALL {
 		return {instr};
 	}
 };
-static Opcode OP_RET {
+static Opcode OP_JALR {
 	.handler = [] (Assembler& a) -> InstructionList {
+		auto& reg1 = a.next<TK_REGISTER> ();
+		Instruction instr(RV32I_JALR);
+		instr.Itype.rs1 = reg1.i64;
+		if (a.next_is(TK_REGISTER)) {
+			auto& reg2 = a.next<TK_REGISTER> ();
+			instr.Itype.rd = reg2.i64;
+		}
+		return {instr};
+	}
+};
+static Opcode OP_RET {
+	.handler = [] (Assembler&) -> InstructionList {
 		Instruction instr(RV32I_JALR);
 		instr.Itype.rs1 = 1;
 		return {instr};
@@ -203,6 +266,11 @@ static Opcode OP_XOR {
 	}
 };
 
+static Opcode OP_SUB {
+	.handler = [] (Assembler& a) -> InstructionList {
+		return {op_f7_helper(a, 0x0, 0b0100000)};
+	}
+};
 static Opcode OP_MUL {
 	.handler = [] (Assembler& a) -> InstructionList {
 		return {op_f7_helper(a, 0x0, 0x1)};
@@ -257,11 +325,21 @@ static const std::unordered_map<std::string, Opcode> opcode_list =
 	{"lq", OP_LQ},
 	{"sq", OP_SQ},
 
+	{"beq", OP_BEQ},
+	{"bne", OP_BNE},
+	{"blt", OP_BLT},
+	{"bge", OP_BGE},
+	{"bltu", OP_BLTU},
+	{"bgeu", OP_BGEU},
+
 	{"call", OP_CALL},
+	{"jal", OP_CALL},
+	{"jalr", OP_JALR},
 	{"ret", OP_RET},
 	{"jmp", OP_JMP},
 
 	{"add", OP_ADD},
+	{"sub", OP_SUB},
 	{"sll", OP_SLL},
 	{"slt", OP_SLT},
 	{"sltu", OP_SLTU},
