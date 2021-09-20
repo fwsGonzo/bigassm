@@ -38,6 +38,7 @@ struct Token {
 		address_t addr;
 		int64_t   i64;
 		uint64_t  u64;
+		__uint128_t  u128;
 		const Opcode* opcode;
 		const PseudoOp* pseudoop;
 		char      raw[16];

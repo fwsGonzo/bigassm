@@ -20,6 +20,7 @@ Tokenizer::parse(const std::vector<RawToken>& raw_tokens)
 		Token tk;
 		tk.type = TK_SYMBOL;
 		tk.line = rt.line;
+		tk.u128 = 0;
 		if (word[0] == '.') {
 			tk.type = TK_DIRECTIVE;
 			tk.value = word;
@@ -31,9 +32,20 @@ Tokenizer::parse(const std::vector<RawToken>& raw_tokens)
 			tk.value = word.substr(1, word.size() - 2);
 		} else if (is_number(word[0])) {
 			if (word.size() > 2 && word[1] == 'x') {
-				tk.u64 = std::stoul(&word[2], nullptr, 16);
+				if (word.size() > 18) {
+					/* 128-bit constant */
+					const size_t upsize = word.size()-18;
+					std::string lower = word.substr(word.size()-16);
+					std::string upper = word.substr(2, upsize);
+					tk.u128 = std::stoull(upper.c_str(), nullptr, 16);
+					tk.u128 <<= 64;
+					tk.u128 |= std::stoull(lower.c_str(), nullptr, 16);
+				} else {
+					/* 8-64-bit constant */
+					tk.u64 = std::stoull(&word[2], nullptr, 16);
+				}
 			} else if (word.size() > 2 && word[1] == 'b') {
-				tk.u64 = std::stoul(&word[2], nullptr, 2);
+				tk.u64 = std::stoull(&word[2], nullptr, 2);
 			} else { // base 10
 				tk.i64 = atoi(word.c_str());
 			}
