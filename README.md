@@ -52,18 +52,20 @@ The store is pretty useless, but it shows how to do a SP-relative store.
 
 - my_label:
 	- Create a new label named 'my_label' which can be jumped to.
-- li [reg], constant
-	- Loads integer constant into register.
-- la [reg], label
-	- Loads address at label into register.
-- lq [reg], [reg]+offset
+- li [dst], constant
+	- Loads integer constant into register 'dst'.
+- set [dst], [tmp], constant
+	- Loads up to 128-bit constant into 'dst' using 'tmp' as intermediate register. Uses many instructions.
+- la [dst], label
+	- Loads address at label into register 'dst'.
+- lq [dst], [reg]+offset
 	- Load 128-bit value from [reg]+offset memory address.
-- sq [reg]+offset, [reg]
+- sq [reg]+offset, [dst]
 	- Store 128-bit value into [reg]+offset memory address.
 - call label
-	- Make a _function call_ to 'label' which can be returned from.
-- farcall [reg], label
-	- Make a _function call_ to a far away 'label' which can be returned from. [reg] is used to build the full address.
+	- Make a _function call_ to 'label' which can be returned from. Uses PC-relative addressing.
+- farcall [tmp], label
+	- Make a _function call_ to a far away 'label' which can be returned from. Register 'tmp' is used to build the full address.
 - ret
 	- Return back from any _function call_.
 - jmp label
@@ -92,10 +94,10 @@ Branches:
 
 Arithmetic and logical operations:
 
-- add, sll, slt, sltu, srl, and, or, xor [reg] [reg _or_ imm]
+- add, sll, slt, sltu, srl, and, or, xor [dst] [reg _or_ imm]
 	- Operation on register with register or immediate.
 
-- sub, mul, div, divu, rem, remu [reg] [reg]
+- sub, mul, div, divu, rem, remu [dst] [reg]
 	- Subtraction, multiplication, division, unsigned division, remainder, unsigned remainder.
 	- Operation on register with register.
 

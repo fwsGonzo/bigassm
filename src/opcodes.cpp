@@ -2,28 +2,81 @@
 #include "instruction_list.hpp"
 #include <unordered_map>
 
+static void build_uint32(
+	InstructionList& res, int reg, int32_t value)
+{
+	Instruction i1(RV32I_OP_IMM);
+	i1.Itype.rd = reg;
+	i1.Itype.imm = value;
+	/* If the constant is large, we can turn the
+	   LI into ADDI combined with LUI. */
+	if (value > 0x7FF || value < -2048)
+	{
+		i1.Itype.rs1 = reg;
+		Instruction i2(RV32I_LUI);
+		i2.Utype.rd = reg;
+		i2.Utype.imm = value >> 12;
+		res.push_back(i2);
+		/* Slight optimization to avoid ADDI */
+		if (value & 0x7FF)
+			res.push_back(i1);
+	} else {
+		res.push_back(i1);
+	}
+}
+
 static Opcode OP_LI {
 	.handler = [] (Assembler& a) -> InstructionList {
-		InstructionList res;
 		auto& reg = a.next<TK_REGISTER> ();
-		auto& off = a.next<TK_CONSTANT> ();
+		auto& imm = a.next<TK_CONSTANT> ();
 
-		Instruction i1(RV32I_OP_IMM);
-		i1.Itype.rd = reg.i64;
-		i1.Itype.imm = off.i64;
-		/* If the constant is large, we can turn the
-		   LI into ADDI combined with LUI. */
-		if (off.i64 > 0x7FF || off.i64 < -2048)
-		{
-			i1.Itype.rs1 = reg.i64;
-			Instruction i2(RV32I_LUI);
-			i2.Utype.rd = reg.i64;
-			i2.Utype.imm = off.i64 >> 12;
-			res.push_back(i2);
+		InstructionList res;
+		build_uint32(res, reg.i64, imm.i64);
+		return res;
+	}
+};
+static Opcode OP_SET {
+	.handler = [] (Assembler& a) -> InstructionList {
+		InstructionList res;
+		auto& dst = a.next<TK_REGISTER> ();
+		auto& temp = a.next<TK_REGISTER> ();
+		auto& imm = a.next<TK_CONSTANT> ();
+		/* When the constant is 32-bits */
+		if (imm.u128 < 0x100000000) {
+			build_uint32(res, dst.i64, imm.i64);
+			return res;
 		}
-		/* Slight optimization to avoid ADDI */
-		if (off.i64 & 0x7FF)
-			res.push_back(i1);
+		/* Large constants using intermediate register */
+		union {
+			__int128_t whole;
+			int32_t    imm[4];
+		} value;
+		value.whole = imm.u128;
+		build_uint32(res, dst.i64, value.imm[3]);
+		__uint128_t value_so_far = value.imm[3];
+
+		for (int i = 2; i >= 0; i--)
+		{
+			const auto imm = value.imm[i];
+			build_uint32(res, temp.i64, imm);
+			if (value_so_far != 0) {
+				/* dst <<= 32 */
+				Instruction i3(RV32I_OP_IMM);
+				i3.Itype.rd  = dst.i64;
+				i3.Itype.rs1 = dst.i64;
+				i3.Itype.funct3 = 0x1;
+				i3.Itype.imm = 32;
+				res.push_back(i3);
+			}
+			value_so_far <<= 32;
+			value_so_far |= imm;
+			/* dst += temp */
+			Instruction i4(RV32I_OP);
+			i4.Rtype.rd  = dst.i64;
+			i4.Rtype.rs1 = dst.i64;
+			i4.Rtype.rs2 = temp.i64;
+			res.push_back(i4);
+		}
 		return res;
 	}
 };
@@ -352,6 +405,7 @@ static Opcode OP_SYSTEM {
 
 static const std::unordered_map<std::string, Opcode> opcode_list =
 {
+	{"set", OP_SET},
 	{"li", OP_LI},
 	{"la", OP_LA},
 	{"lq", OP_LQ},

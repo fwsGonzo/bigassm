@@ -2,9 +2,10 @@
 
 .global _start
 _start:             ;; Entry point label
-	li t0, -16      ;; Stack at end of 128-bit
+	;; Build a 128-bit value using t1 as temporary register
+	set t0, t1, 0xAAAA1111222233334444555566667777
 	xor sp, sp
-	add sp, t0
+	add sp, t0  ;; Set stack pointer
 
 	li  s0, 4
 	xor s1, s1
