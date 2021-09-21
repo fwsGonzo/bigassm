@@ -80,8 +80,11 @@ The store is pretty useless, but it shows how to do a SP-relative store.
 	- Loads address at label into register 'dst'.
 - lq [dst], [reg]+offset
 	- Load 128-bit value from [reg]+offset memory address.
+	- Other sizes: lb (8-bit), lh (16-bit), lw (32-bit), ld (64-bit).
+	- Unsigned: lbu (8-bit), lhu (16-bit), lwu (32-bit), ldu (64-bit).
 - sq [reg]+offset, [dst]
 	- Store 128-bit value into [reg]+offset memory address.
+	- Other sizes: sb (8-bit), sh (16-bit), sw (32-bit), sd (64-bit).
 - call label
 	- Make a _function call_ to 'label' which can be returned from. Uses PC-relative addressing.
 - farcall [tmp], label
@@ -116,10 +119,13 @@ Arithmetic and logical operations:
 
 - add, sll, slt, sltu, srl, and, or, xor [dst] [reg _or_ imm]
 	- Operation on register with register or immediate.
+	- For 32-bit operations append w to the instruction. For example add becomes addw.
+	- For 64-bit operations append d to the instruction. For example xor becomes xord.
 
 - sub, mul, div, divu, rem, remu [dst] [reg]
 	- Subtraction, multiplication, division, unsigned division, remainder, unsigned remainder.
 	- Operation on register with register.
+	- As above, append w for 32-bit and d for 64-bit.
 
 Complete [list of available instructions](src/opcodes.cpp).
 
