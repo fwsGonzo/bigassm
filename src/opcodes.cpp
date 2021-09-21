@@ -10,15 +10,14 @@ static void build_uint32(
 	i1.Itype.imm = value;
 	/* If the constant is large, we can turn the
 	   LI into ADDI combined with LUI. */
-	if (value > 0x7FF || value < -2048)
-	{
-		i1.Itype.rs1 = reg;
-		Instruction i2(RV32I_LUI);
-		i2.Utype.rd = reg;
-		i2.Utype.imm = value >> 12;
+	Instruction i2(RV32I_LUI);
+	i2.Utype.rd = reg;
+	i2.Utype.imm = (value + i1.Itype.imm) >> 12;
+	if (i2.Utype.imm) {
+		i1.Itype.rs1 = reg; /* Turn into ADDI */
 		res.push_back(i2);
 		/* Slight optimization to avoid ADDI */
-		if (value & 0x7FF)
+		if (value & 0xFFF)
 			res.push_back(i1);
 	} else {
 		res.push_back(i1);
