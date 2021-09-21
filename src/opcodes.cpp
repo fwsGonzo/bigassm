@@ -102,36 +102,104 @@ static Opcode OP_LA {
 	}
 };
 
+static InstructionList load_helper(Assembler& a, uint32_t f3)
+{
+	auto& src = a.next<TK_REGISTER> ();
+	Instruction i1(RV32I_LOAD);
+	i1.Itype.funct3 = f3;
+	i1.Itype.rs1 = src.i64;
+	if (a.next_is(TK_CONSTANT)) {
+		auto& imm = a.next<TK_CONSTANT> ();
+		i1.Itype.imm = imm.i64;
+	}
+	auto& dst = a.next<TK_REGISTER> ();
+	i1.Itype.rd  = dst.i64;
+	return {i1};
+}
+static Opcode OP_LB {
+	.handler = [] (Assembler& a) -> InstructionList {
+		return load_helper(a, 0x0);
+	}
+};
+static Opcode OP_LH {
+	.handler = [] (Assembler& a) -> InstructionList {
+		return load_helper(a, 0x1);
+	}
+};
+static Opcode OP_LW {
+	.handler = [] (Assembler& a) -> InstructionList {
+		return load_helper(a, 0x2);
+	}
+};
+static Opcode OP_LD {
+	.handler = [] (Assembler& a) -> InstructionList {
+		return load_helper(a, 0x3);
+	}
+};
+static Opcode OP_LBU {
+	.handler = [] (Assembler& a) -> InstructionList {
+		return load_helper(a, 0x4);
+	}
+};
+static Opcode OP_LHU {
+	.handler = [] (Assembler& a) -> InstructionList {
+		return load_helper(a, 0x5);
+	}
+};
+static Opcode OP_LWU {
+	.handler = [] (Assembler& a) -> InstructionList {
+		return load_helper(a, 0x6);
+	}
+};
+static Opcode OP_LDU {
+	.handler = [] (Assembler& a) -> InstructionList {
+		throw std::runtime_error("Unimplemented");
+	}
+};
 static Opcode OP_LQ {
 	.handler = [] (Assembler& a) -> InstructionList {
-		auto& src = a.next<TK_REGISTER> ();
-		Instruction i1(RV32I_LOAD);
-		i1.Itype.funct3 = 0x7;
-		i1.Itype.rs1 = src.i64;
-		if (a.next_is(TK_CONSTANT)) {
-			auto& imm = a.next<TK_CONSTANT> ();
-			i1.Itype.imm = imm.i64;
-		}
-		auto& dst = a.next<TK_REGISTER> ();
-		i1.Itype.rd  = dst.i64;
-		return {i1};
+		return load_helper(a, 0x7);
 	}
 };
 
+static InstructionList store_helper(Assembler& a, uint32_t f3)
+{
+	auto& src = a.next<TK_REGISTER> ();
+	auto& dst = a.next<TK_REGISTER> ();
+	Instruction i1(RV32I_STORE);
+	i1.Stype.rs1 = dst.i64;
+	i1.Stype.funct3 = f3;
+	i1.Stype.rs2 = src.i64;
+	if (a.next_is(TK_CONSTANT)) {
+		auto& imm = a.next<TK_CONSTANT> ();
+		i1.Stype.imm1 = imm.i64;
+		i1.Stype.imm2 = imm.i64 >> 5;
+		}
+	return {i1};
+}
+static Opcode OP_SB {
+	.handler = [] (Assembler& a) -> InstructionList {
+		return store_helper(a, 0x0);
+	}
+};
+static Opcode OP_SH {
+	.handler = [] (Assembler& a) -> InstructionList {
+		return store_helper(a, 0x1);
+	}
+};
+static Opcode OP_SW {
+	.handler = [] (Assembler& a) -> InstructionList {
+		return store_helper(a, 0x2);
+	}
+};
+static Opcode OP_SD {
+	.handler = [] (Assembler& a) -> InstructionList {
+		return store_helper(a, 0x3);
+	}
+};
 static Opcode OP_SQ {
 	.handler = [] (Assembler& a) -> InstructionList {
-		auto& src = a.next<TK_REGISTER> ();
-		auto& dst = a.next<TK_REGISTER> ();
-		Instruction i1(RV32I_STORE);
-		i1.Stype.rs2 = src.i64;
-		i1.Stype.funct3 = 0x4;
-		i1.Stype.rs1 = dst.i64;
-		if (a.next_is(TK_CONSTANT)) {
-			auto& imm = a.next<TK_CONSTANT> ();
-			i1.Stype.imm1 = imm.i64;
-			i1.Stype.imm2 = imm.i64 >> 5;
-		}
-		return {i1};
+		return store_helper(a, 0x4);
 	}
 };
 
@@ -407,7 +475,21 @@ static const std::unordered_map<std::string, Opcode> opcode_list =
 	{"set", OP_SET},
 	{"li", OP_LI},
 	{"la", OP_LA},
+
+	{"lb", OP_LB},
+	{"lh", OP_LH},
+	{"lw", OP_LW},
+	{"ld", OP_LD},
 	{"lq", OP_LQ},
+	{"lbu", OP_LBU},
+	{"lhu", OP_LHU},
+	{"lwu", OP_LWU},
+	{"ldu", OP_LDU},
+
+	{"sb", OP_SB},
+	{"sh", OP_SH},
+	{"sw", OP_SW},
+	{"sd", OP_SD},
 	{"sq", OP_SQ},
 
 	{"beq", OP_BEQ},
