@@ -24,7 +24,7 @@ static void build_uint32(
 	}
 }
 
-static Opcode OP_LI {
+static struct Opcode OP_LI {
 	.handler = [] (Assembler& a) -> InstructionList {
 		auto& reg = a.next<TK_REGISTER> ();
 		auto& imm = a.next<TK_CONSTANT> ();
@@ -34,7 +34,7 @@ static Opcode OP_LI {
 		return res;
 	}
 };
-static Opcode OP_SET {
+static struct Opcode OP_SET {
 	.handler = [] (Assembler& a) -> InstructionList {
 		InstructionList res;
 		auto& dst = a.next<TK_REGISTER> ();
@@ -80,7 +80,7 @@ static Opcode OP_SET {
 	}
 };
 
-static Opcode OP_LA {
+static struct Opcode OP_LA {
 	.handler = [] (Assembler& a) -> InstructionList
 	{
 		auto& reg = a.next<TK_REGISTER> ();
@@ -116,47 +116,47 @@ static InstructionList load_helper(Assembler& a, uint32_t f3)
 	i1.Itype.rd  = dst.i64;
 	return {i1};
 }
-static Opcode OP_LB {
+static struct Opcode OP_LB {
 	.handler = [] (Assembler& a) -> InstructionList {
 		return load_helper(a, 0x0);
 	}
 };
-static Opcode OP_LH {
+static struct Opcode OP_LH {
 	.handler = [] (Assembler& a) -> InstructionList {
 		return load_helper(a, 0x1);
 	}
 };
-static Opcode OP_LW {
+static struct Opcode OP_LW {
 	.handler = [] (Assembler& a) -> InstructionList {
 		return load_helper(a, 0x2);
 	}
 };
-static Opcode OP_LD {
+static struct Opcode OP_LD {
 	.handler = [] (Assembler& a) -> InstructionList {
 		return load_helper(a, 0x3);
 	}
 };
-static Opcode OP_LBU {
+static struct Opcode OP_LBU {
 	.handler = [] (Assembler& a) -> InstructionList {
 		return load_helper(a, 0x4);
 	}
 };
-static Opcode OP_LHU {
+static struct Opcode OP_LHU {
 	.handler = [] (Assembler& a) -> InstructionList {
 		return load_helper(a, 0x5);
 	}
 };
-static Opcode OP_LWU {
+static struct Opcode OP_LWU {
 	.handler = [] (Assembler& a) -> InstructionList {
 		return load_helper(a, 0x6);
 	}
 };
-static Opcode OP_LDU {
-	.handler = [] (Assembler& a) -> InstructionList {
+static struct Opcode OP_LDU {
+	.handler = [] (Assembler&) -> InstructionList {
 		throw std::runtime_error("Unimplemented");
 	}
 };
-static Opcode OP_LQ {
+static struct Opcode OP_LQ {
 	.handler = [] (Assembler& a) -> InstructionList {
 		return load_helper(a, 0x7);
 	}
@@ -177,27 +177,27 @@ static InstructionList store_helper(Assembler& a, uint32_t f3)
 		}
 	return {i1};
 }
-static Opcode OP_SB {
+static struct Opcode OP_SB {
 	.handler = [] (Assembler& a) -> InstructionList {
 		return store_helper(a, 0x0);
 	}
 };
-static Opcode OP_SH {
+static struct Opcode OP_SH {
 	.handler = [] (Assembler& a) -> InstructionList {
 		return store_helper(a, 0x1);
 	}
 };
-static Opcode OP_SW {
+static struct Opcode OP_SW {
 	.handler = [] (Assembler& a) -> InstructionList {
 		return store_helper(a, 0x2);
 	}
 };
-static Opcode OP_SD {
+static struct Opcode OP_SD {
 	.handler = [] (Assembler& a) -> InstructionList {
 		return store_helper(a, 0x3);
 	}
 };
-static Opcode OP_SQ {
+static struct Opcode OP_SQ {
 	.handler = [] (Assembler& a) -> InstructionList {
 		return store_helper(a, 0x4);
 	}
@@ -223,38 +223,38 @@ static InstructionList branch_helper(Assembler& a, uint32_t f3)
 	});
 	return {instr};
 }
-static Opcode OP_BEQ {
+static struct Opcode OP_BEQ {
 	.handler = [] (Assembler& a) -> InstructionList {
 		return {branch_helper(a, 0x0)};
 	}
 };
-static Opcode OP_BNE {
+static struct Opcode OP_BNE {
 	.handler = [] (Assembler& a) -> InstructionList {
 		return {branch_helper(a, 0x1)};
 	}
 };
-static Opcode OP_BLT {
+static struct Opcode OP_BLT {
 	.handler = [] (Assembler& a) -> InstructionList {
 		return {branch_helper(a, 0x4)};
 	}
 };
-static Opcode OP_BGE {
+static struct Opcode OP_BGE {
 	.handler = [] (Assembler& a) -> InstructionList {
 		return {branch_helper(a, 0x5)};
 	}
 };
-static Opcode OP_BLTU {
+static struct Opcode OP_BLTU {
 	.handler = [] (Assembler& a) -> InstructionList {
 		return {branch_helper(a, 0x6)};
 	}
 };
-static Opcode OP_BGEU {
+static struct Opcode OP_BGEU {
 	.handler = [] (Assembler& a) -> InstructionList {
 		return {branch_helper(a, 0x7)};
 	}
 };
 
-static Opcode OP_FARCALL {
+static struct Opcode OP_FARCALL {
 	.handler = [] (Assembler& a) -> InstructionList {
 		auto& reg = a.next<TK_REGISTER> ();
 		auto& lbl = a.next<TK_SYMBOL> ();
@@ -275,7 +275,7 @@ static Opcode OP_FARCALL {
 		return {i1, i2};
 	}
 };
-static Opcode OP_CALL {
+static struct Opcode OP_CALL {
 	.handler = [] (Assembler& a) -> InstructionList {
 		auto& lbl = a.next<TK_SYMBOL> ();
 		Instruction instr(RV32I_JAL);
@@ -292,7 +292,7 @@ static Opcode OP_CALL {
 		return {instr};
 	}
 };
-static Opcode OP_JALR {
+static struct Opcode OP_JALR {
 	.handler = [] (Assembler& a) -> InstructionList {
 		auto& reg1 = a.next<TK_REGISTER> ();
 		Instruction instr(RV32I_JALR);
@@ -304,14 +304,14 @@ static Opcode OP_JALR {
 		return {instr};
 	}
 };
-static Opcode OP_RET {
+static struct Opcode OP_RET {
 	.handler = [] (Assembler&) -> InstructionList {
 		Instruction instr(RV32I_JALR);
 		instr.Itype.rs1 = 1;
 		return {instr};
 	}
 };
-static Opcode OP_JMP {
+static struct Opcode OP_JMP {
 	.handler = [] (Assembler& a) -> InstructionList {
 		auto& lbl = a.next<TK_SYMBOL> ();
 		Instruction instr(RV32I_JAL);
@@ -328,10 +328,10 @@ static Opcode OP_JMP {
 	}
 };
 
-static Instruction op_imm_helper(Assembler& a, uint32_t funct3)
+static Instruction op_imm_helper(Assembler& a, uint32_t opcode, uint32_t funct3)
 {
 	auto& reg = a.next<TK_REGISTER> ();
-	Instruction instr(RV32I_OP_IMM);
+	Instruction instr(opcode);
 	if (a.next_is(TK_CONSTANT)) {
 		auto& imm = a.next<TK_CONSTANT> ();
 		if (imm.i64 > 0x7FF || imm.i64 < -2048)
@@ -344,7 +344,9 @@ static Instruction op_imm_helper(Assembler& a, uint32_t funct3)
 	} else if (a.next_is(TK_REGISTER)) {
 		auto& reg2 = a.next<TK_REGISTER> ();
 
-		instr.Rtype.opcode = RV32I_OP;
+		instr.Rtype.opcode =
+			(opcode == RV32I_OP_IMM) ? RV32I_OP :
+			(opcode == RV64I_OP_IMM32) ? RV64I_OP32 : RV128I_OP_IMM64;
 		instr.Rtype.rd  = reg.i64;
 		instr.Rtype.funct3 = funct3;
 		instr.Rtype.rs1 = reg.i64;
@@ -354,11 +356,11 @@ static Instruction op_imm_helper(Assembler& a, uint32_t funct3)
 	}
 	return instr;
 }
-static Instruction op_f7_helper(Assembler& a, uint32_t f3, uint32_t f7)
+static Instruction op_f7_helper(Assembler& a, uint32_t opcode, uint32_t f3, uint32_t f7)
 {
 	auto& reg = a.next<TK_REGISTER> ();
 	auto& reg2 = a.next<TK_REGISTER> ();
-	Instruction instr(RV32I_OP);
+	Instruction instr(opcode);
 	instr.Rtype.rd  = reg.i64;
 	instr.Rtype.funct3 = f3;
 	instr.Rtype.rs1 = reg.i64;
@@ -367,99 +369,113 @@ static Instruction op_f7_helper(Assembler& a, uint32_t f3, uint32_t f7)
 	return instr;
 }
 
-static Opcode OP_ADD {
+template <unsigned Opcode>
+static struct Opcode OP_ADD {
 	.handler = [] (Assembler& a) -> InstructionList {
-		return {op_imm_helper(a, 0x0)};
+		return {op_imm_helper(a, Opcode, 0x0)};
 	}
 };
-static Opcode OP_SLL {
+template <unsigned Opcode>
+static struct Opcode OP_SLL {
 	.handler = [] (Assembler& a) -> InstructionList {
-		return {op_imm_helper(a, 0x1)};
+		return {op_imm_helper(a, Opcode, 0x1)};
 	}
 };
-static Opcode OP_SLT {
+template <unsigned Opcode>
+static struct Opcode OP_SLT {
 	.handler = [] (Assembler& a) -> InstructionList {
-		return {op_imm_helper(a, 0x2)};
+		return {op_imm_helper(a, Opcode, 0x2)};
 	}
 };
-static Opcode OP_SLTU {
+template <unsigned Opcode>
+static struct Opcode OP_SLTU {
 	.handler = [] (Assembler& a) -> InstructionList {
-		return {op_imm_helper(a, 0x3)};
+		return {op_imm_helper(a, Opcode, 0x3)};
 	}
 };
-static Opcode OP_SRL {
+template <unsigned Opcode>
+static struct Opcode OP_SRL {
 	.handler = [] (Assembler& a) -> InstructionList {
-		return {op_imm_helper(a, 0x5)};
+		return {op_imm_helper(a, Opcode, 0x5)};
 	}
 };
-static Opcode OP_AND {
+template <unsigned Opcode>
+static struct Opcode OP_AND {
 	.handler = [] (Assembler& a) -> InstructionList {
-		return {op_imm_helper(a, 0x7)};
+		return {op_imm_helper(a, Opcode, 0x7)};
 	}
 };
-static Opcode OP_OR {
+template <unsigned Opcode>
+static struct Opcode OP_OR {
 	.handler = [] (Assembler& a) -> InstructionList {
-		return {op_imm_helper(a, 0x6)};
+		return {op_imm_helper(a, Opcode, 0x6)};
 	}
 };
-static Opcode OP_XOR {
+template <unsigned Opcode>
+static struct Opcode OP_XOR {
 	.handler = [] (Assembler& a) -> InstructionList {
-		return {op_imm_helper(a, 0x4)};
-	}
-};
-
-static Opcode OP_SUB {
-	.handler = [] (Assembler& a) -> InstructionList {
-		return {op_f7_helper(a, 0x0, 0b0100000)};
-	}
-};
-static Opcode OP_MUL {
-	.handler = [] (Assembler& a) -> InstructionList {
-		return {op_f7_helper(a, 0x0, 0x1)};
-	}
-};
-static Opcode OP_DIV {
-	.handler = [] (Assembler& a) -> InstructionList {
-		return {op_f7_helper(a, 0x4, 0x1)};
-	}
-};
-static Opcode OP_DIVU {
-	.handler = [] (Assembler& a) -> InstructionList {
-		return {op_f7_helper(a, 0x5, 0x1)};
-	}
-};
-static Opcode OP_REM {
-	.handler = [] (Assembler& a) -> InstructionList {
-		return {op_f7_helper(a, 0x6, 0x1)};
-	}
-};
-static Opcode OP_REMU {
-	.handler = [] (Assembler& a) -> InstructionList {
-		return {op_f7_helper(a, 0x7, 0x1)};
+		return {op_imm_helper(a, Opcode, 0x4)};
 	}
 };
 
-static Opcode OP_ECALL {
+template <unsigned Opcode>
+static struct Opcode OP_SUB {
+	.handler = [] (Assembler& a) -> InstructionList {
+		return {op_f7_helper(a, Opcode, 0x0, 0b0100000)};
+	}
+};
+template <unsigned Opcode>
+static struct Opcode OP_MUL {
+	.handler = [] (Assembler& a) -> InstructionList {
+		return {op_f7_helper(a, Opcode, 0x0, 0x1)};
+	}
+};
+template <unsigned Opcode>
+static struct Opcode OP_DIV {
+	.handler = [] (Assembler& a) -> InstructionList {
+		return {op_f7_helper(a, Opcode, 0x4, 0x1)};
+	}
+};
+template <unsigned Opcode>
+static struct Opcode OP_DIVU {
+	.handler = [] (Assembler& a) -> InstructionList {
+		return {op_f7_helper(a, Opcode, 0x5, 0x1)};
+	}
+};
+template <unsigned Opcode>
+static struct Opcode OP_REM {
+	.handler = [] (Assembler& a) -> InstructionList {
+		return {op_f7_helper(a, Opcode, 0x6, 0x1)};
+	}
+};
+template <unsigned Opcode>
+static struct Opcode OP_REMU {
+	.handler = [] (Assembler& a) -> InstructionList {
+		return {op_f7_helper(a, Opcode, 0x7, 0x1)};
+	}
+};
+
+static struct Opcode OP_ECALL {
 	.handler = [] (Assembler&) -> InstructionList {
 		Instruction instr(RV32I_SYSTEM);
 		return {instr};
 	}
 };
-static Opcode OP_EBREAK {
+static struct Opcode OP_EBREAK {
 	.handler = [] (Assembler&) -> InstructionList {
 		Instruction instr(RV32I_SYSTEM);
 		instr.Itype.imm = 0x1;
 		return {instr};
 	}
 };
-static Opcode OP_WFI {
+static struct Opcode OP_WFI {
 	.handler = [] (Assembler&) -> InstructionList {
 		Instruction instr(RV32I_SYSTEM);
 		instr.Itype.imm = 0x105;
 		return {instr};
 	}
 };
-static Opcode OP_SYSTEM {
+static struct Opcode OP_SYSTEM {
 	.handler = [] (Assembler& a) -> InstructionList {
 		auto& f3  = a.next<TK_CONSTANT> ();
 		auto& imm = a.next<TK_CONSTANT> ();
@@ -506,21 +522,53 @@ static const std::unordered_map<std::string, Opcode> opcode_list =
 	{"ret", OP_RET},
 	{"jmp", OP_JMP},
 
-	{"add", OP_ADD},
-	{"sub", OP_SUB},
-	{"sll", OP_SLL},
-	{"slt", OP_SLT},
-	{"sltu", OP_SLTU},
-	{"srl", OP_SRL},
-	{"and", OP_AND},
-	{"or",  OP_OR},
-	{"xor", OP_XOR},
+	{"add", OP_ADD<RV32I_OP_IMM>},
+	{"sub", OP_SUB<RV32I_OP>},
+	{"sll", OP_SLL<RV32I_OP_IMM>},
+	{"slt", OP_SLT<RV32I_OP_IMM>},
+	{"sltu", OP_SLTU<RV32I_OP_IMM>},
+	{"srl", OP_SRL<RV32I_OP_IMM>},
+	{"and", OP_AND<RV32I_OP_IMM>},
+	{"or",  OP_OR<RV32I_OP_IMM>},
+	{"xor", OP_XOR<RV32I_OP_IMM>},
 
-	{"mul",  OP_MUL},
-	{"div",  OP_DIV},
-	{"divu", OP_DIVU},
-	{"rem",  OP_REM},
-	{"remu", OP_REMU},
+	{"addw", OP_ADD<RV64I_OP_IMM32>},
+	{"subw", OP_SUB<RV64I_OP32>},
+	{"sllw", OP_SLL<RV64I_OP_IMM32>},
+	{"sltw", OP_SLT<RV64I_OP_IMM32>},
+	{"sltuw", OP_SLTU<RV64I_OP_IMM32>},
+	{"srlw", OP_SRL<RV64I_OP_IMM32>},
+	{"andw", OP_AND<RV64I_OP_IMM32>},
+	{"orw",  OP_OR<RV64I_OP_IMM32>},
+	{"xorw", OP_XOR<RV64I_OP_IMM32>},
+
+	{"addd", OP_ADD<RV128I_OP_IMM64>},
+	{"subd", OP_SUB<RV128I_OP64>},
+	{"slld", OP_SLL<RV128I_OP_IMM64>},
+	{"sltd", OP_SLT<RV128I_OP_IMM64>},
+	{"sltud", OP_SLTU<RV128I_OP_IMM64>},
+	{"srld", OP_SRL<RV128I_OP_IMM64>},
+	{"andd", OP_AND<RV128I_OP_IMM64>},
+	{"ord",  OP_OR<RV128I_OP_IMM64>},
+	{"xord", OP_XOR<RV128I_OP_IMM64>},
+
+	{"mul",  OP_MUL<RV32I_OP>},
+	{"div",  OP_DIV<RV32I_OP>},
+	{"divu", OP_DIVU<RV32I_OP>},
+	{"rem",  OP_REM<RV32I_OP>},
+	{"remu", OP_REMU<RV32I_OP>},
+
+	{"mulw",  OP_MUL<RV64I_OP32>},
+	{"divw",  OP_DIV<RV64I_OP32>},
+	{"divuw", OP_DIVU<RV64I_OP32>},
+	{"remw",  OP_REM<RV64I_OP32>},
+	{"remuw", OP_REMU<RV64I_OP32>},
+
+	{"muld",  OP_MUL<RV128I_OP64>},
+	{"divd",  OP_DIV<RV128I_OP64>},
+	{"divud", OP_DIVU<RV128I_OP64>},
+	{"remd",  OP_REM<RV128I_OP64>},
+	{"remud", OP_REMU<RV128I_OP64>},
 
 	{"syscall",OP_ECALL},
 	{"ecall",  OP_ECALL},
