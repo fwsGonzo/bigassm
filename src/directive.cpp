@@ -11,7 +11,7 @@ void Assembler::directive(const Token& token)
 		const auto& ba = next<TK_CONSTANT>();
 		if (!output.empty())
 			throw std::runtime_error("Cannot change base address when instructions already generated");
-		this->m_base_address = ba.u64;
+		this->m_base_address = ba.u128;
 		printf("Base address: 0x%s\n", to_hex_string(m_base_address).c_str());
 	} else if (token.value == ".type") {
 		const auto& sym = next<TK_SYMBOL>();

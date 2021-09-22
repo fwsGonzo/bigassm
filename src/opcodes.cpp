@@ -2,6 +2,10 @@
 #include "instruction_list.hpp"
 #include <unordered_map>
 
+static bool is_relatively_close(Assembler& a, int64_t diff)
+{
+	return (diff >= INT32_MIN && diff <= INT32_MAX);
+}
 static void bounds_check_jump(Assembler& a, int64_t diff)
 {
 	if (diff < -2048 || diff > 2047) {
@@ -106,8 +110,16 @@ static struct Opcode OP_LA {
 		[iaddr = a.current_address()] (Assembler& a, address_t addr) {
 			auto& i1 = a.instruction_at(iaddr + 0);
 			auto& i2 = a.instruction_at(iaddr + 4);
-			i2.Itype.imm = addr;
-			i1.Utype.imm = (addr + i2.Itype.imm) >> 12;
+			int64_t diff = addr - iaddr;
+			if (is_relatively_close(a, diff)) {
+				i2.Itype.imm = diff;
+				i1.Utype.opcode = RV32I_AUIPC;
+				i1.Utype.imm = (diff + i2.Itype.imm) >> 12;
+			} else {
+				/* TODO: Bounds-check */
+				i2.Itype.imm = addr;
+				i1.Utype.imm = (addr + i2.Itype.imm) >> 12;
+			}
 		});
 		return {i1, i2};
 	}

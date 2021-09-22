@@ -21,12 +21,12 @@ The assembler currently does a one-pass through the assembly, and corrects forwa
 ## Example
 
 ```asm
-.org 0x100000
+.org 0x100020003000400050006000
 
 .global _start
 _start:             ;; Entry point label
 	;; Build a 128-bit value using t1 as temporary register
-	set t0, t1, 0xAAAA1111222233334444555566667777
+	set t0, t1, 0xAAAA1111222233334444555566667770
 	xor sp, sp
 	add sp, t0  ;; Set stack pointer
 
@@ -51,16 +51,16 @@ hello_world:        ;; String label
 
 my_function:
 	add sp, -32
-	sq a0, sp+0
+	sq a0, sp+0     ;; Save A0
 
 	li t0, 2        ;; Syscall 2 (print)
-	sq t0, sp+16    ;; Store 128-bit value
-	lq sp+16, a7    ;; Load 128-bit value
+	sw t0, sp+16    ;; Store 32-bit value
+	lw sp+16, a7    ;; Load 32-bit value
 
 	la a0, hello_world ;; address of string
 	ecall           ;; Execute syscall
 
-	lq sp+0, a0
+	lq sp+0, a0     ;; Restore A0
 
 	ret
 ```
