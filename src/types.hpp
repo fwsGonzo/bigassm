@@ -20,6 +20,7 @@ enum TokenType {
 	TK_PSEUDOOP,
 	TK_REGISTER,
 	TK_CONSTANT,
+	TK_UNSPEC,
 };
 
 struct Register {
@@ -33,7 +34,7 @@ struct PseudoOp;
 struct Token {
 	std::string value;
 	enum TokenType type;
-	uint32_t line;
+	uint32_t line = 0;
 	union {
 		address_t addr;
 		int64_t   i64;
@@ -50,6 +51,8 @@ struct Token {
 
 	std::string to_string() const;
 	static std::string to_string(TokenType);
+
+	Token(TokenType tt = TK_UNSPEC) : type(tt), addr(0) {}
 };
 
 namespace riscv {

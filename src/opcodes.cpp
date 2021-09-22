@@ -2,6 +2,17 @@
 #include "instruction_list.hpp"
 #include <unordered_map>
 
+static void bounds_check_jump(Assembler& a, int64_t diff)
+{
+	if (diff < -2048 || diff > 2047) {
+		[[unlikely]];
+		Token imm(TK_SYMBOL);
+		imm.addr = diff;
+		imm.value = std::to_string(diff);
+		a.token_exception(imm, "Out of bounds address for jump");
+	}
+}
+
 static void build_uint32(
 	InstructionList& res, int reg, int32_t value)
 {
@@ -283,7 +294,8 @@ static struct Opcode OP_CALL {
 		a.schedule(lbl,
 		[iaddr = a.current_address()] (Assembler& a, address_t addr) {
 			auto& instr = a.instruction_at(iaddr);
-			const int32_t diff = addr - iaddr;
+			const int64_t diff = addr - iaddr;
+			bounds_check_jump(a, diff);
 			instr.Jtype.imm3 = diff >> 1;
 			instr.Jtype.imm2 = diff >> 11;
 			instr.Jtype.imm1 = diff >> 12;
@@ -318,7 +330,8 @@ static struct Opcode OP_JMP {
 		a.schedule(lbl,
 		[iaddr = a.current_address()] (Assembler& a, address_t addr) {
 			auto& instr = a.instruction_at(iaddr);
-			const int32_t diff = addr - iaddr;
+			const int64_t diff = addr - iaddr;
+			bounds_check_jump(a, diff);
 			instr.Jtype.imm3 = diff >> 1;
 			instr.Jtype.imm2 = diff >> 11;
 			instr.Jtype.imm1 = diff >> 12;

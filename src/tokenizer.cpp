@@ -17,10 +17,8 @@ Tokenizer::parse(const std::vector<RawToken>& raw_tokens)
 	{
 		const auto& word = rt.name;
 		assert(!word.empty());
-		Token tk;
-		tk.type = TK_SYMBOL;
+		Token tk(TK_SYMBOL);
 		tk.line = rt.line;
-		tk.u128 = 0;
 		if (word[0] == '.') {
 			tk.type = TK_DIRECTIVE;
 			tk.value = word;
