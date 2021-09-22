@@ -77,7 +77,7 @@ The store is pretty useless, but it shows how to do a SP-relative store.
 - set [dst], [tmp], constant
 	- Loads up to 128-bit constant into 'dst' using 'tmp' as intermediate register. Uses many instructions.
 - la [dst], label
-	- Loads address at label into register 'dst'.
+	- Loads address at label into register 'dst'. Supports relative 128-bit addresses if the label is +/-2GB. Supports absolute +/- 2GB address.
 - lq [dst], [reg]+offset
 	- Load 128-bit value from [reg]+offset memory address.
 	- Other sizes: lb (8-bit), lh (16-bit), lw (32-bit), ld (64-bit).
@@ -93,7 +93,9 @@ The store is pretty useless, but it shows how to do a SP-relative store.
 	- Return back from any _function call_.
 - jmp label
 	- Jump directly to label.
-- scall
+- syscall [constant]
+	- Puts constant into A7 and performs system call. Arguments in A0-A6.
+- ecall
 	- Perform system call from register A7. Arguments in A0-A6.
 - ebreak
 	- Debugger breakpoint.
@@ -143,7 +145,7 @@ Complete [list of available pseudo-ops](src/pseudo_ops.cpp).
 ## Directives
 
 - .org 0x10000
-	- Set the base address of the binary, which now starts at 0x10000.
+	- Set the base address of the binary, which now starts at 0x10000. Supports 128-bit addresses.
 - .align 4
 	- Align memory to the given power-of-two.
 - .string "String here!"

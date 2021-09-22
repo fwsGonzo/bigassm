@@ -2,7 +2,7 @@
 #include "instruction_list.hpp"
 #include <unordered_map>
 
-static bool is_relatively_close(Assembler& a, int64_t diff)
+static bool is_relatively_close(Assembler&, int64_t diff)
 {
 	return (diff >= INT32_MIN && diff <= INT32_MAX);
 }
@@ -38,6 +38,12 @@ static void build_uint32(
 		res.push_back(i1);
 	}
 }
+
+static struct Opcode OP_NOP {
+	.handler = [] (Assembler&) -> InstructionList {
+		return {Instruction(RV32I_OP_IMM)};
+	}
+};
 
 static struct Opcode OP_LI {
 	.handler = [] (Assembler& a) -> InstructionList {
@@ -480,6 +486,16 @@ static struct Opcode OP_REMU {
 	}
 };
 
+static struct Opcode OP_SYSCALL {
+	.handler = [] (Assembler& a) -> InstructionList {
+		auto& imm = a.next<TK_CONSTANT> ();
+		Instruction i1(RV32I_OP_IMM);
+		i1.Itype.rd = 17;
+		i1.Itype.imm = imm.i64;
+		Instruction i2(RV32I_SYSTEM);
+		return {i1, i2};
+	}
+};
 static struct Opcode OP_ECALL {
 	.handler = [] (Assembler&) -> InstructionList {
 		Instruction instr(RV32I_SYSTEM);
@@ -513,6 +529,7 @@ static struct Opcode OP_SYSTEM {
 
 static const std::unordered_map<std::string, Opcode> opcode_list =
 {
+	{"nop", OP_NOP},
 	{"set", OP_SET},
 	{"li", OP_LI},
 	{"la", OP_LA},
@@ -595,7 +612,7 @@ static const std::unordered_map<std::string, Opcode> opcode_list =
 	{"remd",  OP_REM<RV128I_OP64>},
 	{"remud", OP_REMU<RV128I_OP64>},
 
-	{"syscall",OP_ECALL},
+	{"syscall",OP_SYSCALL},
 	{"ecall",  OP_ECALL},
 	{"ebreak", OP_EBREAK},
 	{"wfi",    OP_WFI},

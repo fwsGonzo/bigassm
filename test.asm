@@ -17,9 +17,8 @@ repeat:
 	;; We return here after the function ends.
 
 exit:
-	li a7, 1        ;; Syscall 1 (exit)
 	li a0, 0x666    ;; Exit code (1st arg)
-	ecall           ;; Execute syscall
+	syscall 1       ;; Execute system call 1 (exit)
 	jmp exit        ;; Loop exit to prevent problems
 
 hello_world:        ;; String label
