@@ -95,8 +95,8 @@ static struct Opcode OP_LA {
 		[iaddr = a.current_address()] (Assembler& a, address_t addr) {
 			auto& i1 = a.instruction_at(iaddr + 0);
 			auto& i2 = a.instruction_at(iaddr + 4);
-			i1.Utype.imm = addr >> 12;
-			i2.Itype.imm = addr & 0xFFF;
+			i2.Itype.imm = addr;
+			i1.Utype.imm = (addr + i2.Itype.imm) >> 12;
 		});
 		return {i1, i2};
 	}
