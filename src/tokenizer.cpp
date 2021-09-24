@@ -1,4 +1,4 @@
-#include "tokenizer.hpp"
+#include "assembler.hpp"
 #include "opcodes.hpp"
 #include "registers.hpp"
 #include <cassert>
@@ -10,7 +10,7 @@ static bool is_number(char c) {
 }
 
 std::vector<Token>
-Tokenizer::parse(const std::vector<RawToken>& raw_tokens)
+Assembler::parse(const std::vector<RawToken>& raw_tokens)
 {
 	std::vector<Token> tokens;
 	for (const auto& rt : raw_tokens)

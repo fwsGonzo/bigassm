@@ -17,6 +17,7 @@ set(SOURCES
 	src/main.cpp
 	src/opcodes.cpp
 	src/pseudo_ops.cpp
+	src/raw_split.cpp
 	src/registers.cpp
 	src/section.cpp
 	src/token.cpp

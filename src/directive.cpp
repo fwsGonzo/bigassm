@@ -1,4 +1,5 @@
 #include "assembler.hpp"
+extern std::string load_file(const std::string&);
 
 void Assembler::directive(const Token& token)
 {
@@ -9,6 +10,12 @@ void Assembler::directive(const Token& token)
 	} else if (token.value == ".global") {
 		const auto& sym = next<TK_SYMBOL>();
 		this->make_global(sym.value);
+	} else if (token.value == ".include") {
+		const auto& sym = next<TK_STRING>();
+		auto contents = load_file(sym.value);
+		auto raw_tokens = Assembler::split(contents);
+		auto tokens = Assembler::parse(raw_tokens);
+		this->assemble(tokens);
 	} else if (token.value == ".section") {
 		/* Sections aren't really directives, but they do
 		   start with a . (dot), so use that for simplicity. */

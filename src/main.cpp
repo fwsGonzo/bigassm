@@ -1,10 +1,8 @@
 #include "assembler.hpp"
-#include "tokenizer.hpp"
 #include "elf128.h"
-#include <sstream>
 extern std::string load_file(const std::string&);
 static bool file_writer(const std::string&, const std::vector<uint8_t>&);
-static std::vector<RawToken> split(const std::string&);
+extern std::vector<RawToken> split(const std::string&);
 static constexpr bool VERBOSE_WORDS = false;
 static constexpr bool VERBOSE_TOKENS = false;
 static constexpr bool VERBOSE_SECTIONS = true;
@@ -26,14 +24,14 @@ int main(int argc, char** argv)
 	{
 		const std::string infile = argv[1];
 		auto input = load_file(infile);
-		auto raw_tokens = split(input);
+		auto raw_tokens = Assembler::split(input);
 
 		if constexpr (VERBOSE_WORDS) {
 			for (const auto& rt : raw_tokens)
 				printf("Word: %s\n", rt.name.c_str());
 		}
 
-		auto tokens = Tokenizer::parse(raw_tokens);
+		auto tokens = Assembler::parse(raw_tokens);
 		if constexpr (VERBOSE_TOKENS) {
 			for (auto& token : tokens)
 				printf("Token: %s\n", token.to_string().c_str());
@@ -140,69 +138,6 @@ int main(int argc, char** argv)
 	const std::string binfile = outfile + ".bin";
 	auto& text = assembler.section(".text");
 	file_writer(binfile, text.output);
-}
-
-#define FLUSH_WORD() \
-	if (!word.empty()) {	\
-		tokens.push_back({word, line});	\
-		word.clear();	\
-	}
-
-std::vector<RawToken> split(const std::string& s)
-{
-	std::vector<RawToken> tokens;
-
-	std::string word;
-	uint32_t line = 1;
-	bool begin_quotes = false;
-	bool begin_comment = false;
-	for (char c : s)
-	{
-		if (begin_quotes) {
-			word.append(1, c);
-			if (c == '"') {
-				tokens.push_back({word, line});
-				word.clear();
-				begin_quotes = false;
-			}
-			continue;
-		}
-		if (begin_comment) {
-			if (c == '\n') {
-				begin_comment = false;
-			}
-			continue;
-		}
-		switch (c) {
-		case ';':
-			begin_comment = true;
-			continue;
-		case '+':
-		case '-':
-		case '*':
-			/* This allows building constant chains */
-			FLUSH_WORD();
-			word.append(1, c);
-			break;
-		case ',':
-		case ' ':
-		case '\t':
-		case '\n':
-		case '\r':
-			FLUSH_WORD();
-			if (c == '\n') line++;
-			break;
-		case '"':
-			begin_quotes = true;
-			[[fallthrough]];
-		default:
-			word.append(1, c);
-		}
-	}
-	if (!word.empty())
-		tokens.push_back({word, line});
-
-    return tokens;
 }
 
 #include <stdexcept>

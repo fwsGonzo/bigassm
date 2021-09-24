@@ -150,13 +150,15 @@ Complete [list of available pseudo-ops](src/pseudo_ops.cpp).
 	- Set the base address of the binary, which now starts at 0x10000. Supports 128-bit addresses.
 - .align 4
 	- Align memory to the given power-of-two.
-- .finish_labels
-	- Output any labels that aren't directly attached to data, or force outputting a label before alignment.
 - .execonly
 	- Make the section execute-only. (ELF only)
+- .finish_labels
+	- Output any labels that aren't directly attached to data, or force outputting a label before alignment.
+- .include filename
+	- Read contents from file, parse and assemble it at the current position.
 - .readonly
 	- Make the section read-only. (ELF only)
-- .section
+- .section name
 	- Create or continue an ELF section. Some attributes are automatically applied based on the data put into the section.
 - .size label
 	- Calculate the difference between the current position and the given label and output a 32-bit constant.

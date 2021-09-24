@@ -12,6 +12,8 @@ Assembler::Assembler(const Options& opt)
 
 void Assembler::assemble(const std::vector<Token>& tv)
 {
+	const auto prev_tokens = this->tokens;
+	const auto prev_index = this->index;
 	this->tokens = &tv;
 	this->index = 0;
 	assert((options.base & 0xF) == 0);
@@ -46,6 +48,9 @@ void Assembler::assemble(const std::vector<Token>& tv)
 			throw std::runtime_error("Unexpected token: " + token.to_string());
 		}
 	}
+	/* Restore any previous assembler operation. */
+	this->tokens = prev_tokens;
+	this->index = prev_index;
 }
 void Assembler::finish()
 {
