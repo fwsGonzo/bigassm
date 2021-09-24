@@ -1,4 +1,5 @@
 #include "opcodes.hpp"
+#include "section.hpp"
 #include "instruction_list.hpp"
 #include <unordered_map>
 
@@ -113,10 +114,10 @@ static struct Opcode OP_LA {
 		i2.Itype.rs1 = reg.i64;
 		/* Potentially resolve later */
 		a.schedule(lbl,
-		[iaddr = a.current_address()] (Assembler& a, address_t addr) {
-			auto& i1 = a.instruction_at(iaddr + 0);
-			auto& i2 = a.instruction_at(iaddr + 4);
-			int64_t diff = addr - iaddr;
+		[loc = a.current_location()] (Assembler& a, address_t addr) {
+			auto& i1 = a.instruction_at(loc, 0);
+			auto& i2 = a.instruction_at(loc, 4);
+			int64_t diff = addr - loc.address();
 			if (is_relatively_close(a, diff)) {
 				i2.Itype.imm = diff;
 				i1.Utype.opcode = RV32I_AUIPC;
@@ -242,9 +243,9 @@ static InstructionList branch_helper(Assembler& a, uint32_t f3)
 	instr.Btype.rs2 = reg2.i64;
 	instr.Btype.funct3 = f3;
 	a.schedule(lbl,
-	[iaddr = a.current_address()] (Assembler& a, address_t addr) {
-		auto& instr = a.instruction_at(iaddr);
-		const int32_t diff = addr - iaddr;
+	[loc = a.current_location()] (Assembler& a, address_t addr) {
+		auto& instr = a.instruction_at(loc);
+		const int32_t diff = addr - loc.address();
 		instr.Btype.imm2 = diff >> 1;
 		instr.Btype.imm3 = diff >> 5;
 		instr.Btype.imm1 = diff >> 11;
@@ -295,9 +296,9 @@ static struct Opcode OP_FARCALL {
 		i2.Itype.rd  = 1; /* Return address */
 
 		a.schedule(lbl,
-		[iaddr = a.current_address()] (Assembler& a, address_t addr) {
-			auto& i1 = a.instruction_at(iaddr + 0);
-			auto& i2 = a.instruction_at(iaddr + 4);
+		[loc = a.current_location()] (Assembler& a, address_t addr) {
+			auto& i1 = a.instruction_at(loc, 0);
+			auto& i2 = a.instruction_at(loc, 4);
 			i1.Utype.imm = addr >> 12;
 			i2.Itype.imm = addr;
 		});
@@ -310,9 +311,9 @@ static struct Opcode OP_CALL {
 		Instruction instr(RV32I_JAL);
 		instr.Jtype.rd = 1; /* Return address */
 		a.schedule(lbl,
-		[iaddr = a.current_address()] (Assembler& a, address_t addr) {
-			auto& instr = a.instruction_at(iaddr);
-			const int64_t diff = addr - iaddr;
+		[loc = a.current_location()] (Assembler& a, address_t addr) {
+			auto& instr = a.instruction_at(loc);
+			const int64_t diff = addr - loc.address();
 			bounds_check_jump(a, diff);
 			instr.Jtype.imm3 = diff >> 1;
 			instr.Jtype.imm2 = diff >> 11;
@@ -346,9 +347,9 @@ static struct Opcode OP_JMP {
 		auto& lbl = a.next<TK_SYMBOL> ();
 		Instruction instr(RV32I_JAL);
 		a.schedule(lbl,
-		[iaddr = a.current_address()] (Assembler& a, address_t addr) {
-			auto& instr = a.instruction_at(iaddr);
-			const int64_t diff = addr - iaddr;
+		[loc = a.current_location()] (Assembler& a, address_t addr) {
+			auto& instr = a.instruction_at(loc);
+			const int64_t diff = addr - loc.address();
 			bounds_check_jump(a, diff);
 			instr.Jtype.imm3 = diff >> 1;
 			instr.Jtype.imm2 = diff >> 11;

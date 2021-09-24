@@ -1,5 +1,6 @@
 .org 0x100020003000400050006000
 
+.section .text
 .global _start
 _start:             ;; Entry point label
 	;; Build a 128-bit value using t1 as temporary register
@@ -21,10 +22,15 @@ exit:
 	syscall 1       ;; Execute system call 1 (exit)
 	jmp exit        ;; Loop exit to prevent problems
 
+.section .rodata
+.readonly
 hello_world:        ;; String label
 	.type hello_world, @object
 	.string "Hello World!" ;; Zt-string
+hello_world_size:
+	.size hello_world
 
+.section .text
 my_function:
 	add sp, -32
 	sq a0, sp+0     ;; Save A0
@@ -34,6 +40,8 @@ my_function:
 	lw sp+16, a7    ;; Load 32-bit value
 
 	la a0, hello_world ;; address of string
+	la a1, hello_world_size
+	lw a1, a1       ;; size of string
 	ecall           ;; Execute syscall
 
 	lq sp+0, a0     ;; Restore A0

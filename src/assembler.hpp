@@ -1,5 +1,5 @@
 #pragma once
-#include "types.hpp"
+#include "section.hpp"
 #include <functional>
 #include <map>
 #include <unordered_map>
@@ -7,6 +7,8 @@
 
 struct Options {
 	address_t base = 0x100000;
+	std::string entry = "_start";
+	bool section_attr_page_separation = true;
 };
 
 struct Assembler
@@ -34,21 +36,21 @@ struct Assembler
 	bool needs(size_t args) const noexcept { return index + args <= tokens.size(); }
 	bool done() const noexcept { return index >= tokens.size(); }
 
-	address_t base_address() const noexcept { return m_base_address; }
-	address_t current_offset() const noexcept { return output.size(); }
-	address_t current_address() const noexcept { return base_address() + output.size(); }
 	bool is_aligned(size_t alignment) {
-		return (output.size() & (alignment-1)) == 0;
+		return (current_section().size() & (alignment-1)) == 0;
 	}
+	void align(size_t alignment) { current_section().align(alignment); }
 	void align_with_labels(size_t alignment);
-	void align(size_t alignment) {
-		size_t newsize = (output.size() + (alignment-1)) & ~(alignment-1);
-		if (output.size() != newsize)
-			output.resize(newsize);
-	}
 
-	void add_output(const void* vdata, size_t len);
+	void add_output(OutputType, const void* vdata, size_t len);
 	void allocate(size_t len);
+
+	auto& sections() noexcept { return m_sections; }
+	void set_section(const std::string&);
+	Section& section(const std::string&);
+	Section& current_section() noexcept { return *m_current_section; }
+	const Section& current_section() const noexcept { return *m_current_section; }
+	SymbolLocation current_location() const noexcept { return m_current_section->current_location(); }
 
 	bool symbol_is_known(const Token&) const;
 	address_t address_of(const Token&) const;
@@ -56,26 +58,34 @@ struct Assembler
 	void schedule(const Token&, scheduled_op_t);
 
 	void add_symbol_here(const std::string& name);
+	void make_global(const std::string& name);
 	void add_label_soon(const std::string& name);
-	void add_label_here(const std::string& name);
 
-	Instruction& instruction_at(address_t);
-	Instruction& instruction_at_offset(size_t);
+	template <typename T>
+	T& at_location(SymbolLocation, size_t off = 0);
+	Instruction& instruction_at(SymbolLocation, size_t off = 0);
 
 	[[noreturn]] void token_exception(const Token&, const std::string&) const;
 
-	Assembler(const Options& opt, const std::vector<Token>& t, std::vector<uint8_t>& out)
-		: options(opt), tokens(t), output(out), m_base_address(options.base) {}
+	Assembler(const Options& opt, const std::vector<Token>&);
 
 	const Options& options;
 	const std::vector<Token>& tokens;
-	std::vector<uint8_t>& output;
 
 private:
+	void resolve_base_addresses();
 	void finish_scheduled_work();
 	size_t index = 0;
-	address_t m_base_address;
-	std::vector<std::string> m_label_queue;
-	std::unordered_map<std::string, address_t> lookup;
+	Section* m_current_section = nullptr;
+	std::map<std::string, Section> m_sections;
+	std::unordered_map<std::string, SymbolLocation> lookup;
 	std::map<std::string, std::vector<scheduled_op_t>> m_schedule;
+	std::vector<std::string> m_globals;
 };
+
+template <typename T>
+inline T& Assembler::at_location(SymbolLocation loc, size_t off) {
+	auto& section = *loc.section;
+	auto& output = section.output;
+	return *(T*)&output.at(loc.address() + off - section.base_address());
+}

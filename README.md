@@ -1,4 +1,3 @@
-
 # 128-bit RISC-V assembler
 
 RISC-V has a 128-bit ISA that is fairly developed, but not standardized fully yet.
@@ -16,13 +15,14 @@ While there is no ELF format for 128-bit anything, this assembler outputs an [EL
 
 ## Simple one-pass
 
-The assembler currently does a one-pass through the assembly, and corrects forward labels once they appear. This means that there may be potential inefficiencies. It is, however, very fast.
+The assembler currently does a one-pass through the assembly, and corrects forward labels once they appear. It also resolves sections as they appear and will give them the right RWX attributes in the ELF. This means that there may be potential inefficiencies. It is, however, very fast.
 
 ## Example
 
 ```asm
 .org 0x100020003000400050006000
 
+.section .text
 .global _start
 _start:             ;; Entry point label
 	;; Build a 128-bit value using t1 as temporary register
@@ -40,15 +40,17 @@ repeat:
 	;; We return here after the function ends.
 
 exit:
-	li a7, 1        ;; Syscall 1 (exit)
 	li a0, 0x666    ;; Exit code (1st arg)
-	ecall           ;; Execute syscall
+	syscall 1       ;; Execute system call 1 (exit)
 	jmp exit        ;; Loop exit to prevent problems
 
+.section .rodata
+.readonly
 hello_world:        ;; String label
 	.type hello_world, @object
 	.string "Hello World!" ;; Zt-string
 
+.section .text
 my_function:
 	add sp, -32
 	sq a0, sp+0     ;; Save A0
@@ -148,6 +150,14 @@ Complete [list of available pseudo-ops](src/pseudo_ops.cpp).
 	- Set the base address of the binary, which now starts at 0x10000. Supports 128-bit addresses.
 - .align 4
 	- Align memory to the given power-of-two.
+- .finish_labels
+	- Output any labels that aren't directly attached to data, or force outputting a label before alignment.
+- .readonly
+	- Make the section read-only. (ELF only)
+- .section
+	- Create or continue an ELF section. Some attributes are automatically applied based on the data put into the section.
+- .size label
+	- Calculate the difference between the current position and the given label and output a 32-bit constant.
 - .string "String here!"
 	- Insert a zero-terminated string.
 

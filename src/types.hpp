@@ -55,6 +55,9 @@ struct Token {
 	Token(TokenType tt = TK_UNSPEC) : type(tt), addr(0) {}
 };
 
+struct Assembler;
+struct Section;
+
 namespace riscv {
 	union rv32i_instruction;
 }

@@ -41,18 +41,31 @@ int main(int argc, char** argv)
 	}
 
 	Options options;
-	std::vector<uint8_t> output;
-	Assembler assembler(options, tokens, output);
+	Assembler assembler(options, tokens);
 	assembler.assemble();
+
+	auto& sections = assembler.sections();
+	size_t section_data_size = 0;
+	for (const auto& it : sections) {
+		auto& section = it.second;
+		printf("Section %s has: CODE=%d DATA=%d RESV=%d\n",
+			section.name().c_str(), section.code, section.data, section.resv);
+		if (section.code || section.data)
+			section_data_size += section.size();
+	}
+	printf("There are %zu sections\n", sections.size());
 
 	if constexpr (USE_ELF128) {
 		std::vector<uint8_t> elfbin;
 		struct ElfData {
 			Elf128_Ehdr hdr;
-			Elf128_Phdr phdr[1];
+			Elf128_Phdr phdr[0];
 		};
-		elfbin.reserve(sizeof(ElfData) + output.size());
-		elfbin.resize(sizeof(ElfData));
+		const size_t elfhdr_size = sizeof(ElfData) +
+			sizeof(Elf128_Phdr) * sections.size();
+		const size_t elfdata_size = elfhdr_size + section_data_size;
+		elfbin.reserve(elfdata_size);
+		elfbin.resize(elfhdr_size);
 		auto* elfdata = (ElfData*) elfbin.data();
 		auto& elf = elfdata->hdr;
 		elf.e_ident[EI_MAG0] = ELFMAG0;
@@ -66,31 +79,48 @@ int main(int argc, char** argv)
 		elf.e_type = ET_EXEC;
 		elf.e_machine = EM_RISCV;
 		elf.e_version = EV_CURRENT;
-		elf.e_entry = assembler.address_of("_start");
+		elf.e_entry = assembler.address_of(options.entry);
 		elf.e_phoff = offsetof(ElfData, phdr);
 		elf.e_shoff = 0;
 		elf.e_ehsize = sizeof(Elf128_Ehdr);
 		elf.e_phentsize = sizeof(Elf128_Phdr);
-		elf.e_phnum = 1;
+		elf.e_phnum = sections.size();
 		elf.e_shentsize = sizeof(Elf128_Shdr);
 		elf.e_shnum = 0;
 		elf.e_shstrndx = SHN_UNDEF;
-		auto& program = elfdata->phdr[0];
-		program.p_type = PT_LOAD;
-		program.p_flags = PF_R | PF_W | PF_X;
-		program.p_offset = sizeof(ElfData);
-		program.p_vaddr = assembler.base_address();
-		program.p_paddr = assembler.base_address();
-		program.p_filesz = output.size();
-		program.p_memsz = output.size();
-		program.p_align = 0x10;
-		elfbin.insert(elfbin.end(), output.begin(), output.end());
+		size_t sect = 0;
+		for (const auto& it : sections)
+		{
+			auto& program = elfdata->phdr[sect++];
+			auto& section = it.second;
+			const bool loadable = section.code || section.data;
+			program.p_type = loadable ? PT_LOAD : 0x0;
+			program.p_flags = 0;
+			if (section.code) {
+				program.p_flags |= PF_X;
+				if (section.data || section.resv)
+					fprintf(stderr, "WARNING: There is data in executable section %s\n",
+						section.name().c_str());
+			}
+			if (section.data || section.resv) {
+				program.p_flags |= PF_R;
+				if (!section.readonly) program.p_flags |= PF_W;
+			}
+			program.p_offset = elfbin.size();
+			program.p_vaddr = section.base_address();
+			program.p_paddr = section.base_address();
+			program.p_filesz = (loadable) ? section.size() : 0u;
+			program.p_memsz = section.size();
+			program.p_align = 0x0;
+			elfbin.insert(elfbin.end(), section.output.begin(), section.output.end());
+		}
 		file_writer(outfile, elfbin);
 		printf("Written %zu bytes to %s\n", elfbin.size(), outfile.c_str());
 	}
 	const std::string binfile = outfile + ".bin";
-	file_writer(binfile, output);
-	printf("Written %zu bytes to %s\n", output.size(), binfile.c_str());
+	auto& text = assembler.section(".text");
+	file_writer(binfile, text.output);
+	printf("Written %zu bytes to %s\n", text.size(), binfile.c_str());
 }
 
 #define FLUSH_WORD() \

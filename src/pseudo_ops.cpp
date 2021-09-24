@@ -9,14 +9,14 @@ static PseudoOp DATA_128 {
 		auto& constant = a.next<TK_CONSTANT> ();
 		__uint128_t value = constant.u64;
 		a.align_with_labels(16);
-		a.add_output(&value, sizeof(value));
+		a.add_output(OT_DATA, &value, sizeof(value));
 	}
 };
 static PseudoOp DATA_64 {
 	.handler = [] (Assembler& a) {
 		auto& constant = a.next<TK_CONSTANT> ();
 		a.align_with_labels(8);
-		a.add_output(&constant.u64, sizeof(uint64_t));
+		a.add_output(OT_DATA, &constant.u64, sizeof(uint64_t));
 	}
 };
 static PseudoOp DATA_32 {
@@ -24,7 +24,7 @@ static PseudoOp DATA_32 {
 		auto& constant = a.next<TK_CONSTANT> ();
 		a.align_with_labels(4);
 		uint32_t value = constant.u64;
-		a.add_output(&value, sizeof(value));
+		a.add_output(OT_DATA, &value, sizeof(value));
 	}
 };
 static PseudoOp DATA_16 {
@@ -32,14 +32,14 @@ static PseudoOp DATA_16 {
 		auto& constant = a.next<TK_CONSTANT> ();
 		a.align_with_labels(2);
 		uint16_t value = constant.u64;
-		a.add_output(&value, sizeof(value));
+		a.add_output(OT_DATA, &value, sizeof(value));
 	}
 };
 static PseudoOp DATA_8 {
 	.handler = [] (Assembler& a) {
 		auto& constant = a.next<TK_CONSTANT> ();
 		uint8_t value = constant.u64;
-		a.add_output(&value, sizeof(value));
+		a.add_output(OT_DATA, &value, sizeof(value));
 	}
 };
 
@@ -82,7 +82,7 @@ static PseudoOp INCBIN {
 	.handler = [] (Assembler& a) {
 		auto& filename = a.next<TK_STRING> ();
 		auto contents = load_file(filename.value);
-		a.add_output(contents.data(), contents.size());
+		a.add_output(OT_DATA, contents.data(), contents.size());
 	}
 };
 

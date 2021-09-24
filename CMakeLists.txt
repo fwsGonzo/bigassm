@@ -18,6 +18,7 @@ set(SOURCES
 	src/opcodes.cpp
 	src/pseudo_ops.cpp
 	src/registers.cpp
+	src/section.cpp
 	src/token.cpp
 	src/tokenizer.cpp
 )
