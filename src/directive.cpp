@@ -8,7 +8,7 @@ void Assembler::directive(const Token& token)
 		this->align_with_labels(0);
 	} else if (token.value == ".global") {
 		const auto& sym = next<TK_SYMBOL>();
-		(void) sym;
+		this->make_global(sym.value);
 	} else if (token.value == ".section") {
 		/* Sections aren't really directives, but they do
 		   start with a . (dot), so use that for simplicity. */
@@ -21,6 +21,8 @@ void Assembler::directive(const Token& token)
 		current_section().set_base_address(ba.u128);
 		printf("Base address: 0x%s\n",
 			to_hex_string(current_section().base_address()).c_str());
+	} else if (token.value == ".execonly") {
+		current_section().make_execonly();
 	} else if (token.value == ".readonly") {
 		current_section().make_readonly();
 	} else if (token.value == ".type") {

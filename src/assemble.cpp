@@ -3,15 +3,17 @@
 #include "pseudo_ops.hpp"
 #include <cassert>
 
-Assembler::Assembler(const Options& opt, const std::vector<Token>& t)
-	: options(opt), tokens(t)
+Assembler::Assembler(const Options& opt)
+	: options(opt)
 {
 	this->set_section(".text"); /* Default section */
 	current_section().set_base_address(options.base);
 }
 
-void Assembler::assemble()
+void Assembler::assemble(const std::vector<Token>& tv)
 {
+	this->tokens = &tv;
+	this->index = 0;
 	assert((options.base & 0xF) == 0);
 
 	while (!this->done())
@@ -44,7 +46,9 @@ void Assembler::assemble()
 			throw std::runtime_error("Unexpected token: " + token.to_string());
 		}
 	}
-
+}
+void Assembler::finish()
+{
 	this->resolve_base_addresses();
 	this->finish_scheduled_work();
 }

@@ -27,6 +27,7 @@ struct Section {
 	void allocate(size_t len);
 	void align(size_t alignment);
 	void align_with_labels(Assembler&, size_t alignment);
+	void make_execonly() { this->execonly = true; }
 	void make_readonly() { this->readonly = true; }
 
 	const std::string& name() const noexcept { return m_name; }
@@ -40,6 +41,7 @@ struct Section {
 	bool code = false;
 	bool data = false;
 	bool resv = false;
+	bool execonly = false;
 	bool readonly = false;
 
 	Section(const std::string& name, int idx) : m_name{name}, m_idx{idx} {}

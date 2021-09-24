@@ -9,17 +9,18 @@ struct Options {
 	address_t base = 0x100000;
 	std::string entry = "_start";
 	bool section_attr_page_separation = true;
+	bool verbose_labels = false;
 };
 
 struct Assembler
 {
 	using scheduled_op_t = std::function<void(Assembler&, address_t)>;
 
-	void assemble();
-	void directive(const Token&);
+	void assemble(const std::vector<Token>&);
+	void finish();
 
 	const Token& next() {
-		return tokens.at(index++);
+		return tokens->at(index++);
 	}
 	template <TokenType T>
 	const Token& next() {
@@ -31,10 +32,9 @@ struct Assembler
 	}
 	bool next_is(TokenType tt) const {
 		if (done()) return false;
-		return tokens.at(index).type == tt;
+		return tokens->at(index).type == tt;
 	}
-	bool needs(size_t args) const noexcept { return index + args <= tokens.size(); }
-	bool done() const noexcept { return index >= tokens.size(); }
+	bool done() const noexcept { return index >= tokens->size(); }
 
 	bool is_aligned(size_t alignment) {
 		return (current_section().size() & (alignment-1)) == 0;
@@ -57,8 +57,10 @@ struct Assembler
 	address_t address_of(const std::string&) const;
 	void schedule(const Token&, scheduled_op_t);
 
+	void directive(const Token&);
 	void add_symbol_here(const std::string& name);
 	void make_global(const std::string& name);
+	const auto& globals() const noexcept { return m_globals; }
 	void add_label_soon(const std::string& name);
 
 	template <typename T>
@@ -67,15 +69,15 @@ struct Assembler
 
 	[[noreturn]] void token_exception(const Token&, const std::string&) const;
 
-	Assembler(const Options& opt, const std::vector<Token>&);
-
+	Assembler(const Options& opt);
 	const Options& options;
-	const std::vector<Token>& tokens;
-
 private:
 	void resolve_base_addresses();
 	void finish_scheduled_work();
+
+	const std::vector<Token>* tokens = nullptr;
 	size_t index = 0;
+
 	Section* m_current_section = nullptr;
 	std::map<std::string, Section> m_sections;
 	std::unordered_map<std::string, SymbolLocation> lookup;

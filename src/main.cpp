@@ -7,6 +7,8 @@ static bool file_writer(const std::string&, const std::vector<uint8_t>&);
 static std::vector<RawToken> split(const std::string&);
 static constexpr bool VERBOSE_WORDS = false;
 static constexpr bool VERBOSE_TOKENS = false;
+static constexpr bool VERBOSE_SECTIONS = true;
+static constexpr bool VERBOSE_GLOBALS = true;
 static constexpr bool USE_ELF128 = true;
 
 int main(int argc, char** argv)
@@ -17,43 +19,42 @@ int main(int argc, char** argv)
 	}
 	const std::string outfile = argv[argc-1];
 
-	std::vector<RawToken> raw_tokens;
+	Options options;
+	Assembler assembler(options);
+
 	for (int i = 1; i < argc-1; i++)
 	{
 		const std::string infile = argv[1];
 		auto input = load_file(infile);
-		auto inwords = split(input);
-		raw_tokens.insert(raw_tokens.end(), inwords.begin(), inwords.end());
+		auto raw_tokens = split(input);
+
+		if constexpr (VERBOSE_WORDS) {
+			for (const auto& rt : raw_tokens)
+				printf("Word: %s\n", rt.name.c_str());
+		}
+
+		auto tokens = Tokenizer::parse(raw_tokens);
+		if constexpr (VERBOSE_TOKENS) {
+			for (auto& token : tokens)
+				printf("Token: %s\n", token.to_string().c_str());
+		}
+
+		assembler.assemble(tokens);
 	}
 
-	if constexpr (VERBOSE_WORDS) {
-	for (const auto& rt : raw_tokens)
-		printf("Word: %s\n", rt.name.c_str());
-	}
-	auto tokens = Tokenizer::parse(raw_tokens);
-
-	printf("Tokens: %zu  Lines: %u\n",
-		tokens.size(), raw_tokens.back().line);
-
-	if constexpr (VERBOSE_TOKENS) {
-	for (auto& token : tokens)
-		printf("Token: %s\n", token.to_string().c_str());
-	}
-
-	Options options;
-	Assembler assembler(options, tokens);
-	assembler.assemble();
+	assembler.finish();
 
 	auto& sections = assembler.sections();
 	size_t section_data_size = 0;
 	for (const auto& it : sections) {
 		auto& section = it.second;
-		printf("Section %s has: CODE=%d DATA=%d RESV=%d\n",
-			section.name().c_str(), section.code, section.data, section.resv);
+		if constexpr (VERBOSE_SECTIONS) {
+			printf("Section %s has: CODE=%d DATA=%d RESV=%d\n",
+				section.name().c_str(), section.code, section.data, section.resv);
+		}
 		if (section.code || section.data)
 			section_data_size += section.size();
 	}
-	printf("There are %zu sections\n", sections.size());
 
 	if constexpr (USE_ELF128) {
 		std::vector<uint8_t> elfbin;
@@ -102,9 +103,18 @@ int main(int argc, char** argv)
 					fprintf(stderr, "WARNING: There is data in executable section %s\n",
 						section.name().c_str());
 			}
-			if (section.data || section.resv) {
-				program.p_flags |= PF_R;
-				if (!section.readonly) program.p_flags |= PF_W;
+			if (!section.code || !section.execonly) {
+				if (section.data || section.resv) {
+					program.p_flags |= PF_R;
+					if (!section.readonly) program.p_flags |= PF_W;
+				}
+			}
+			if constexpr (VERBOSE_SECTIONS) {
+			printf("ELF program header %s flags %c%c%c\n",
+				section.name().c_str(),
+				(program.p_flags & PF_R) ? 'R' : ' ',
+				(program.p_flags & PF_W) ? 'W' : ' ',
+				(program.p_flags & PF_X) ? 'X' : ' ');
 			}
 			program.p_offset = elfbin.size();
 			program.p_vaddr = section.base_address();
@@ -115,12 +125,21 @@ int main(int argc, char** argv)
 			elfbin.insert(elfbin.end(), section.output.begin(), section.output.end());
 		}
 		file_writer(outfile, elfbin);
-		printf("Written %zu bytes to %s\n", elfbin.size(), outfile.c_str());
+	}
+	if constexpr (VERBOSE_GLOBALS) {
+	printf("------------------ Global symbols ------------------\n");
+	for (const auto& symbol : assembler.globals())
+	{
+		auto addr = assembler.address_of(symbol);
+		printf("\tGLOBAL\t  %s\t  0x%s\n",
+			symbol.c_str(),
+			to_hex_string(addr).c_str());
+	}
+	printf("------------------ Global symbols ------------------\n");
 	}
 	const std::string binfile = outfile + ".bin";
 	auto& text = assembler.section(".text");
 	file_writer(binfile, text.output);
-	printf("Written %zu bytes to %s\n", text.size(), binfile.c_str());
 }
 
 #define FLUSH_WORD() \

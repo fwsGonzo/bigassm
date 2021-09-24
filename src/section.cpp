@@ -10,8 +10,10 @@ void Section::add_label_soon(const std::string& name) {
 	m_label_queue.push_back(name);
 }
 void Section::add_label_here(Assembler& a, const std::string& label) {
+	if (a.options.verbose_labels) {
 	printf("Label %s at %s off 0x%s\n",
 		label.c_str(), name().c_str(), to_hex_string(current_address()).c_str());
+	}
 	/* TODO: Check for duplicate labels */
 	a.add_symbol_here(label);
 }

@@ -152,6 +152,8 @@ Complete [list of available pseudo-ops](src/pseudo_ops.cpp).
 	- Align memory to the given power-of-two.
 - .finish_labels
 	- Output any labels that aren't directly attached to data, or force outputting a label before alignment.
+- .execonly
+	- Make the section execute-only. (ELF only)
 - .readonly
 	- Make the section read-only. (ELF only)
 - .section
