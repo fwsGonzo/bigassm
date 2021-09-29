@@ -2,7 +2,7 @@
 
 #include "assembler.hpp"
 #include <unordered_map>
-extern std::string load_file(const std::string&);
+extern std::string load_file(const std::string&, const char*);
 
 static PseudoOp DATA_128 {
 	.handler = [] (Assembler& a) {
@@ -81,7 +81,7 @@ static PseudoOp RESV_128 {
 static PseudoOp INCBIN {
 	.handler = [] (Assembler& a) {
 		auto& filename = a.next<TK_STRING> ();
-		auto contents = load_file(filename.value);
+		auto contents = load_file(filename.value, a.realpath());
 		a.align_with_labels(1);
 		a.add_output(OT_DATA, contents.data(), contents.size());
 	}

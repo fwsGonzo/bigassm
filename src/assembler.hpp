@@ -20,7 +20,7 @@ struct Assembler
 	static std::vector<RawToken> split(const std::string&);
 	static std::vector<Token> parse(const std::vector<RawToken>&);
 
-	void assemble(const std::vector<Token>&);
+	void assemble(const std::vector<Token>&, const char* rpath);
 	void finish();
 
 	const Token& next() {
@@ -78,6 +78,7 @@ struct Assembler
 
 	Assembler(const Options& opt);
 	const Options& options;
+	const char* realpath() const noexcept { return m_realpath; }
 private:
 	void resolve_base_addresses();
 	void finish_scheduled_work();
@@ -90,6 +91,7 @@ private:
 	std::unordered_map<std::string, SymbolLocation> m_lookup;
 	std::map<std::string, std::vector<scheduled_op_t>> m_schedule;
 	std::set<std::string> m_globals;
+	const char* m_realpath;
 };
 
 template <typename T>

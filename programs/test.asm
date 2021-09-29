@@ -45,3 +45,5 @@ my_function:
 
 	ret
 .endfunc my_function
+
+label_at_end:

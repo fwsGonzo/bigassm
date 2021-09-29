@@ -1,6 +1,7 @@
 #include "assembler.hpp"
 #include <elf.h>
-extern std::string load_file(const std::string&);
+extern std::string load_file(const std::string&, const char*);
+extern const char* get_realpath(const char* path);
 
 void Assembler::directive(const Token& token)
 {
@@ -22,10 +23,11 @@ void Assembler::directive(const Token& token)
 		this->make_global(sym.value);
 	} else if (token.value == ".include") {
 		const auto& sym = next<TK_STRING>();
-		auto contents = load_file(sym.value);
+		auto contents = load_file(sym.value, m_realpath);
 		auto raw_tokens = Assembler::split(contents);
 		auto tokens = Assembler::parse(raw_tokens);
-		this->assemble(tokens);
+		const char* rpath = get_realpath(sym.value.c_str());
+		this->assemble(tokens, rpath);
 	} else if (token.value == ".section") {
 		/* Sections aren't really directives, but they do
 		   start with a . (dot), so use that for simplicity. */

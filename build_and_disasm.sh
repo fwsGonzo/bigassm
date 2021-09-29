@@ -1,8 +1,10 @@
 #!/usr/bin/env bash
 set -e
+ASMF=${1:-programs/test.asm}
+OUTELF=${2:-test.elf}
 
 pushd build
 ninja
 popd
-./build/fab128 test.asm test.elf
-riscv64-linux-gnu-objdump -b binary -m riscv -EL -D test.elf.bin
+time ./build/fab128 $ASMF $OUTELF
+riscv64-linux-gnu-objdump -b binary -m riscv -EL -D $OUTELF.bin

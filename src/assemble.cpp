@@ -10,12 +10,15 @@ Assembler::Assembler(const Options& opt)
 	current_section().set_base_address(options.base);
 }
 
-void Assembler::assemble(const std::vector<Token>& tv)
+void Assembler::assemble(const std::vector<Token>& tv,
+	const char* rpath)
 {
 	const auto prev_tokens = this->tokens;
 	const auto prev_index = this->index;
+	const auto prev_rpath = this->m_realpath;
 	this->tokens = &tv;
 	this->index = 0;
+	this->m_realpath = rpath;
 	assert((options.base & 0xF) == 0);
 
 	while (!this->done())
@@ -51,10 +54,19 @@ void Assembler::assemble(const std::vector<Token>& tv)
 	/* Restore any previous assembler operation. */
 	this->tokens = prev_tokens;
 	this->index = prev_index;
+	this->m_realpath = prev_rpath;
 }
 void Assembler::finish()
 {
+	/* Output any remaining unattached labels. */
+	for (auto& sit : sections()) {
+		sit.second.align_with_labels(*this, 1);
+	}
+	/* Calculate addresses for each section in the
+	   order they appear, unless the section has
+	   a custom base address. */
 	this->resolve_base_addresses();
+	/* Resolve addresses, sizes, custom symbol data. */
 	this->finish_scheduled_work();
 }
 
@@ -179,7 +191,7 @@ void Assembler::finish_scheduled_work()
 void Assembler::symbol_set_type(const std::string& name, uint32_t type)
 {
 	schedule(name,
-	[type] (Assembler& a, auto&, SymbolLocation& sym) {
+	[type] (Assembler&, auto&, SymbolLocation& sym) {
 		sym.type = type;
 	});
 }

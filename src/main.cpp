@@ -1,7 +1,9 @@
 #include "assembler.hpp"
 //#define OUTPUT_64BIT_ELF
 #include "elf128.h"
-extern std::string load_file(const std::string&);
+#include <cstring>
+#include <libgen.h>
+extern std::string load_file(const std::string&, const char* = nullptr);
 static bool file_writer(const std::string&, const std::vector<uint8_t>&);
 extern std::vector<RawToken> split(const std::string&);
 static constexpr bool VERBOSE_WORDS = false;
@@ -16,6 +18,12 @@ struct ElfData {
 	Elf128_Shdr shdr[1 + S];
 	Elf128_Phdr phdr[0];
 };
+
+extern const char* get_realpath(const char* path) {
+	/* XXX: Intentionally leaky. */
+	char* copy = strdup(path);
+	return realpath(dirname(copy), NULL);
+}
 
 int main(int argc, char** argv)
 {
@@ -45,7 +53,8 @@ int main(int argc, char** argv)
 				printf("Token: %s\n", token.to_string().c_str());
 		}
 
-		assembler.assemble(tokens);
+		const char* rpath = get_realpath(infile.c_str());
+		assembler.assemble(tokens, rpath);
 	}
 
 	assembler.finish();
@@ -175,12 +184,18 @@ int main(int argc, char** argv)
 
 #include <stdexcept>
 #include <unistd.h>
-std::string load_file(const std::string& filename)
+std::string load_file(const std::string& filename, const char* rpath)
 {
     size_t size = 0;
     FILE* f = fopen(filename.c_str(), "rb");
-    if (f == NULL) throw std::runtime_error("Could not open file: " + filename);
-
+    if (f == NULL) {
+		if (rpath != NULL) {
+			std::string relpath = std::string(rpath) + "/" + filename;
+			f = fopen(relpath.c_str(), "rb");
+		}
+		if (f == NULL)
+		throw std::runtime_error("Could not open file: " + filename);
+	}
     fseek(f, 0, SEEK_END);
     size = ftell(f);
     fseek(f, 0, SEEK_SET);
