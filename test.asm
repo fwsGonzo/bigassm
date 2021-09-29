@@ -6,7 +6,8 @@ _start:             ;; Entry point label
 	;; Build a 128-bit value using t1 as temporary register
 	set t0, t1, 0xAAAA1111222233334444555566667770
 	xor sp, sp
-	add sp, t0  ;; Set stack pointer
+	add sp, t0      ;; Set stack pointer
+	.type _start, function
 
 	li  s0, 4
 	xor s1, s1
@@ -16,11 +17,13 @@ repeat:
 
 	call my_function ;; A regular function call
 	;; We return here after the function ends.
+.endfunc _start
 
 exit:
 	li a0, 0x666    ;; Exit code (1st arg)
 	syscall 1       ;; Execute system call 1 (exit)
 	jmp exit        ;; Loop exit to prevent problems
+.endfunc exit
 
 .include "test2.asm"
 
@@ -41,3 +44,4 @@ my_function:
 	lq sp+0, a0     ;; Restore A0
 
 	ret
+.endfunc my_function

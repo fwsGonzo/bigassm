@@ -10,6 +10,8 @@ enum OutputType {
 struct SymbolLocation {
 	const Section* section;
 	uint64_t offset;
+	uint32_t type = 0x0;
+	uint64_t size = 0x0;
 
 	address_t address() const noexcept;
 };

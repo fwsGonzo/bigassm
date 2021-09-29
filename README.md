@@ -150,6 +150,8 @@ Complete [list of available pseudo-ops](src/pseudo_ops.cpp).
 	- Set the base address of the binary, which now starts at 0x10000. Supports 128-bit addresses.
 - .align 4
 	- Align memory to the given power-of-two.
+- .endfunc name
+	- Calculates and sets the size of 'name' and type to function.
 - .execonly
 	- Make the section execute-only. (ELF only)
 - .finish_labels

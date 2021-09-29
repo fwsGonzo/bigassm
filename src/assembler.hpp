@@ -3,6 +3,7 @@
 #include <functional>
 #include <map>
 #include <unordered_map>
+#include <set>
 #include <stdexcept>
 
 struct Options {
@@ -14,7 +15,7 @@ struct Options {
 
 struct Assembler
 {
-	using scheduled_op_t = std::function<void(Assembler&, address_t)>;
+	using scheduled_op_t = std::function<void(Assembler&, const std::string&, SymbolLocation&)>;
 
 	static std::vector<RawToken> split(const std::string&);
 	static std::vector<Token> parse(const std::vector<RawToken>&);
@@ -58,11 +59,14 @@ struct Assembler
 	bool symbol_is_known(const Token&) const;
 	address_t address_of(const Token&) const;
 	address_t address_of(const std::string&) const;
+	void schedule(const std::string&, scheduled_op_t);
 	void schedule(const Token&, scheduled_op_t);
 
 	void directive(const Token&);
 	void add_symbol_here(const std::string& name);
+	const auto& symbols() const noexcept { return m_lookup; }
 	void make_global(const std::string& name);
+	void symbol_set_type(const std::string& name, uint32_t type);
 	const auto& globals() const noexcept { return m_globals; }
 	void add_label_soon(const std::string& name);
 
@@ -83,9 +87,9 @@ private:
 
 	Section* m_current_section = nullptr;
 	std::map<std::string, Section> m_sections;
-	std::unordered_map<std::string, SymbolLocation> lookup;
+	std::unordered_map<std::string, SymbolLocation> m_lookup;
 	std::map<std::string, std::vector<scheduled_op_t>> m_schedule;
-	std::vector<std::string> m_globals;
+	std::set<std::string> m_globals;
 };
 
 template <typename T>

@@ -1,4 +1,5 @@
 #include "assembler.hpp"
+//#define OUTPUT_64BIT_ELF
 #include "elf128.h"
 extern std::string load_file(const std::string&);
 static bool file_writer(const std::string&, const std::vector<uint8_t>&);
@@ -8,6 +9,13 @@ static constexpr bool VERBOSE_TOKENS = false;
 static constexpr bool VERBOSE_SECTIONS = true;
 static constexpr bool VERBOSE_GLOBALS = true;
 static constexpr bool USE_ELF128 = true;
+
+struct ElfData {
+	static inline constexpr size_t S = 3;
+	Elf128_Ehdr hdr;
+	Elf128_Shdr shdr[1 + S];
+	Elf128_Phdr phdr[0];
+};
 
 int main(int argc, char** argv)
 {
@@ -56,14 +64,9 @@ int main(int argc, char** argv)
 
 	if constexpr (USE_ELF128) {
 		std::vector<uint8_t> elfbin;
-		struct ElfData {
-			Elf128_Ehdr hdr;
-			Elf128_Phdr phdr[0];
-		};
 		const size_t elfhdr_size = sizeof(ElfData) +
 			sizeof(Elf128_Phdr) * sections.size();
-		const size_t elfdata_size = elfhdr_size + section_data_size;
-		elfbin.reserve(elfdata_size);
+		elfbin.reserve(262144);
 		elfbin.resize(elfhdr_size);
 		auto* elfdata = (ElfData*) elfbin.data();
 		auto& elf = elfdata->hdr;
@@ -80,13 +83,43 @@ int main(int argc, char** argv)
 		elf.e_version = EV_CURRENT;
 		elf.e_entry = assembler.address_of(options.entry);
 		elf.e_phoff = offsetof(ElfData, phdr);
-		elf.e_shoff = 0;
+		elf.e_shoff = offsetof(ElfData, shdr);
 		elf.e_ehsize = sizeof(Elf128_Ehdr);
 		elf.e_phentsize = sizeof(Elf128_Phdr);
 		elf.e_phnum = sections.size();
 		elf.e_shentsize = sizeof(Elf128_Shdr);
-		elf.e_shnum = 0;
-		elf.e_shstrndx = SHN_UNDEF;
+		elf.e_shnum = 1 + ElfData::S;
+		elf.e_shstrndx = 1;
+
+		ElfStringSection shnames { elfdata->shdr[1], 1, elfbin };
+		/* We need to all all sections now. */
+		shnames.shdr.sh_name = shnames.add(".shstrtab");
+		shnames.add(".symtab");
+		shnames.add(".strtab");
+
+		/* Add all strings now. */
+		ElfStringSection strings { elfdata->shdr[3], 3, elfbin };
+		strings.shdr.sh_name = shnames.lookup(".strtab");
+		for (const auto& sit : assembler.symbols()) {
+			strings.add(sit.first);
+		}
+
+		/* Add all the visible symbols */
+		ElfSymSection syms { elfdata->shdr[2], strings.shindex, elfbin };
+		syms.shdr.sh_name = shnames.lookup(".symtab");
+		for (const auto& sit : assembler.symbols()) {
+			auto& sym = sit.second;
+			uint32_t info = sym.type | SHN_ABS;
+			if (assembler.globals().count(sit.first) > 0)
+				info |= STB_GLOBAL;
+			else {
+				info |= STB_LOCAL;
+			}
+			syms.add(sit.first, sym.address(), sym.type, sym.size, strings);
+		}
+		syms.shdr.sh_info = assembler.symbols().size()+1;
+		file_writer(outfile, elfbin);
+
 		size_t sect = 0;
 		for (const auto& it : sections)
 		{

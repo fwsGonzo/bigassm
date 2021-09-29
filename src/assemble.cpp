@@ -128,27 +128,27 @@ void Assembler::align_with_labels(size_t alignment) {
 
 bool Assembler::symbol_is_known(const Token& tk) const
 {
-	return lookup.find(tk.value) != lookup.end();
+	return m_lookup.find(tk.value) != m_lookup.end();
 }
 void Assembler::add_symbol_here(const std::string& name) {
-	lookup.emplace(std::piecewise_construct,
+	m_lookup.emplace(std::piecewise_construct,
 		std::forward_as_tuple(name),
 		std::forward_as_tuple(
 			SymbolLocation{m_current_section, m_current_section->size()}));
 }
 address_t Assembler::address_of(const std::string& name) const
 {
-	auto it = lookup.find(name);
-	if (it != lookup.end())
-		return it->second.section->address_at(it->second.offset);
+	auto it = m_lookup.find(name);
+	if (it != m_lookup.end())
+		return it->second.address();
 
 	throw std::runtime_error("No such symbol: " + name);
 }
 address_t Assembler::address_of(const Token& tk) const
 {
-	auto it = lookup.find(tk.value);
-	if (it != lookup.end())
-		return it->second.section->address_at(it->second.offset);
+	auto it = m_lookup.find(tk.value);
+	if (it != m_lookup.end())
+		return it->second.address();
 
 	token_exception(tk, "resolve symbol");
 }
@@ -158,18 +158,34 @@ void Assembler::schedule(const Token& tk, scheduled_op_t op)
 	const auto& sym = tk.value;
 	m_schedule[sym].push_back(std::move(op));
 }
+void Assembler::schedule(const std::string& sym, scheduled_op_t op)
+{
+	m_schedule[sym].push_back(std::move(op));
+}
 void Assembler::finish_scheduled_work()
 {
 	for (auto& it : m_schedule) {
-		const auto address = address_of(it.first);
-		for (auto& op : it.second)
-			op(*this, address);
+		const auto& name = it.first;
+		auto sit = m_lookup.find(name);
+		if (sit != m_lookup.end()) {
+			for (auto& op : it.second)
+				op(*this, sit->first, sit->second);
+		} else {
+			throw std::runtime_error("Unknown symbol scheduled: " + name);
+		}
 	}
 }
 
+void Assembler::symbol_set_type(const std::string& name, uint32_t type)
+{
+	schedule(name,
+	[type] (Assembler& a, auto&, SymbolLocation& sym) {
+		sym.type = type;
+	});
+}
 void Assembler::make_global(const std::string& name)
 {
-	m_globals.push_back(name);
+	m_globals.insert(name);
 }
 
 void Assembler::token_exception(const Token& tk, const std::string& info) const

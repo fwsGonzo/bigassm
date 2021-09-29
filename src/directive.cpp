@@ -1,10 +1,20 @@
 #include "assembler.hpp"
+#include <elf.h>
 extern std::string load_file(const std::string&);
 
 void Assembler::directive(const Token& token)
 {
 	if (token.value == ".align") {
 		this->align(next<TK_CONSTANT>().u64);
+	} else if (token.value == ".endfunc") {
+		const auto& sym = next<TK_SYMBOL>();
+		auto loc = current_location();
+
+		this->schedule(sym,
+		[loc] (Assembler&, const std::string&, auto& sym) {
+			sym.size = loc.address() - sym.address();
+			sym.type = STT_FUNC;
+		});
 	} else if (token.value == ".finish_labels") {
 		this->align_with_labels(0);
 	} else if (token.value == ".global") {
@@ -34,9 +44,14 @@ void Assembler::directive(const Token& token)
 		current_section().make_readonly();
 	} else if (token.value == ".type") {
 		const auto& sym = next<TK_SYMBOL>();
-		const auto& cls = next<TK_SYMBOL>();
-		(void) sym;
-		(void) cls;
+		const auto& info = next<TK_SYMBOL>();
+		if (info.value == "object") {
+			this->symbol_set_type(sym.value, STT_OBJECT);
+		} else if (info.value == "func" || info.value == "function") {
+			this->symbol_set_type(sym.value, STT_FUNC);
+		} else {
+			throw std::runtime_error("Unknown type: " + info.value);
+		}
 	} else if (token.value == ".size") {
 		const auto& sym = next<TK_SYMBOL>();
 		const uint32_t size = 0;
@@ -46,12 +61,13 @@ void Assembler::directive(const Token& token)
 		const auto* src = (const uint8_t *)&size;
 
 		this->schedule(sym,
-		[loc, dataloc] (Assembler& a, address_t addr) {
+		[loc, dataloc] (Assembler& a, const std::string&, auto& sym) {
 			auto& size = a.at_location<uint32_t>(loc);
-			if (addr < dataloc.address())
-				size = dataloc.address() - addr; /* NB: Opposite */
+			if (sym.address() < dataloc.address())
+				size = dataloc.address() - sym.address(); /* NB: Opposite */
 			else
-				size = addr - 4 - loc.address(); /* NB: Forward */
+				size = sym.address() - 4 - loc.address(); /* NB: Forward */
+			sym.size = size;
 		});
 		add_output(OT_DATA, src, sizeof(size));
 
