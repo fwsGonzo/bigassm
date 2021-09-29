@@ -82,6 +82,7 @@ static PseudoOp INCBIN {
 	.handler = [] (Assembler& a) {
 		auto& filename = a.next<TK_STRING> ();
 		auto contents = load_file(filename.value);
+		a.align_with_labels(1);
 		a.add_output(OT_DATA, contents.data(), contents.size());
 	}
 };

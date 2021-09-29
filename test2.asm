@@ -6,3 +6,8 @@ hello_world:        ;; String label
 hello_world_size:
 	.type hello_world_size, object
 	.size hello_world
+
+readme:
+	incbin "README.md"
+readme_size:
+	.size readme
