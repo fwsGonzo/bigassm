@@ -7,6 +7,7 @@ option(LTO         "Enable interprocedural optimizations" ON)
 option(NATIVE      "Enable native instructions" OFF)
 option(SANITIZE    "Enable sanitizers" OFF)
 option(STATIC_BUILD "Build a static executable" OFF)
+option(64BIT_ELF   "Build a 64-bit ELF" OFF)
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra")
 
@@ -39,6 +40,9 @@ function (add_assembler NAME)
 	set_target_properties(${NAME} PROPERTIES CXX_STANDARD 17)
 	target_compile_definitions(${NAME} PRIVATE ${ARGN})
 
+	if (64BIT_ELF)
+		target_compile_definitions(${NAME} PRIVATE OUTPUT_64BIT_ELF=1)
+	endif()
 	if (LTO)
 		set_property(TARGET ${NAME} PROPERTY INTERPROCEDURAL_OPTIMIZATION TRUE)
 	endif()

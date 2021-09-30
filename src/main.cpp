@@ -1,5 +1,4 @@
 #include "assembler.hpp"
-//#define OUTPUT_64BIT_ELF
 #include "elf128.h"
 #include <cstring>
 #include <libgen.h>

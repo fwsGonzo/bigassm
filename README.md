@@ -170,3 +170,9 @@ Complete [list of available pseudo-ops](src/pseudo_ops.cpp).
 	- Insert a zero-terminated string.
 
 Complete [list of available directives](src/directive.cpp).
+
+## Inspect the 128-bit ELF
+
+I don't know of any tools that can inspect 128-bit ELFs, as there isn't even an ELFCLASS for it. But there is a CMake option enables outputting a 64-bit ELF which can be read normally with readelf.
+
+Unfortunately, objdump disassembly is not supported yet because the code and data sections are not output yet, but you can see all the local and global symbols. As well as the program segments with readelf.
