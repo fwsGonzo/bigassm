@@ -149,7 +149,7 @@ Complete [list of available pseudo-ops](src/pseudo_ops.cpp).
 ## Directives
 
 - .org 0x10000
-	- Set the base address of the binary, which now starts at 0x10000. Supports 128-bit addresses.
+	- Set the base address of the current section, which now starts at 0x10000. Supports 128-bit addresses. You can only set the base address for each section once, and the assembler will not warn about overlaps or non-canonical addresses. Sections usually gain base address automatically in-order from their appearance in the assembly.
 - .align 4
 	- Align memory to the given power-of-two.
 - .endfunc name
