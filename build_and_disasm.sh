@@ -3,7 +3,9 @@ set -e
 ASMF=${1:-programs/test.asm}
 OUTELF=${2:-test.elf}
 
+mkdir -p build
 pushd build
+cmake .. -G Ninja
 ninja
 popd
 time ./build/fab128 $ASMF $OUTELF
