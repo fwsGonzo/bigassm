@@ -1,5 +1,4 @@
 build/
 nim/
 fab
-test.elf
-test.elf.bin
+test.elf*

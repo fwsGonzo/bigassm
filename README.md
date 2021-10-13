@@ -173,6 +173,6 @@ Complete [list of available directives](src/directive.cpp).
 
 ## Inspect the 128-bit ELF
 
-I don't know of any tools that can inspect 128-bit ELFs, as there isn't even an ELFCLASS for it. But there is a CMake option enables outputting a 64-bit ELF which can be read normally with readelf.
+I don't know of any tools that can inspect 128-bit ELFs, as there isn't even an ELFCLASS for it. The assembler will output both 64-bit and 128-bit ELF files, where the 64-bit one can be read normally with readelf.
 
 Unfortunately, objdump disassembly is not supported yet because the code and data sections are not output yet, but you can see all the local and global symbols. As well as the program segments with readelf.
