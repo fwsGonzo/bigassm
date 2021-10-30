@@ -42,7 +42,7 @@ repeat:
 .endfunc _start
 
 exit:
-	li a0, 0x666    ;; Exit code (1st arg)
+	li a0, 'A'      ;; Exit code 65 (1st arg)
 	syscall 1       ;; Execute system call 1 (exit)
 	jmp exit        ;; Loop exit to prevent problems
 .endfunc exit
@@ -128,11 +128,13 @@ Arithmetic and logical operations:
 	- For 32-bit operations append w to the instruction. For example add becomes addw.
 	- For 64-bit operations append d to the instruction. For example xor becomes xord.
 
-- sub, mul, div, divu, rem, remu [dst] [reg] ([reg])
+- sub, mul, div, divu, rem, remu [dst] [reg]
 	- Subtraction, multiplication, division, unsigned division, remainder, unsigned remainder.
 	- Operation on register with register.
-	- Optionally, an additional register for [dst] [r1] [r2].
 	- As above, append w for 32-bit and d for 64-bit.
+
+- All ops support a 3-register mode: [dst] [r1] [r2].
+	- Example: add t0, a0, a1 _equals_ t0 = a0 + a1.
 
 Complete [list of available instructions](src/opcodes.cpp).
 

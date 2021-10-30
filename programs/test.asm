@@ -20,7 +20,7 @@ repeat:
 .endfunc _start
 
 exit:
-	li a0, 0x666    ;; Exit code (1st arg)
+	li a0, 'A'      ;; Exit code (1st arg)
 	syscall 1       ;; Execute system call 1 (exit)
 	jmp exit        ;; Loop exit to prevent problems
 .endfunc exit
