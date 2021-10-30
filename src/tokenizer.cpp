@@ -24,7 +24,6 @@ Assembler::parse(const std::vector<RawToken>& raw_tokens)
 		const auto& word = rt.name;
 		assert(!word.empty());
 		Token tk(TK_SYMBOL);
-		tk.line = rt.line;
 		if (word[0] == '.') {
 			tk.type = TK_DIRECTIVE;
 			tk.value = word;
@@ -74,6 +73,9 @@ Assembler::parse(const std::vector<RawToken>& raw_tokens)
 					tk = pseudo_op(word);
 			}
 		}
+		/* Fixup line here, because opcodes and pseudo-ops lack
+		   line number information. */
+		tk.line = rt.line;
 		tokens.push_back(tk);
 	}
 	return tokens;

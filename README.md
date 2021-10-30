@@ -128,9 +128,10 @@ Arithmetic and logical operations:
 	- For 32-bit operations append w to the instruction. For example add becomes addw.
 	- For 64-bit operations append d to the instruction. For example xor becomes xord.
 
-- sub, mul, div, divu, rem, remu [dst] [reg]
+- sub, mul, div, divu, rem, remu [dst] [reg] ([reg])
 	- Subtraction, multiplication, division, unsigned division, remainder, unsigned remainder.
 	- Operation on register with register.
+	- Optionally, an additional register for [dst] [r1] [r2].
 	- As above, append w for 32-bit and d for 64-bit.
 
 Complete [list of available instructions](src/opcodes.cpp).
@@ -168,6 +169,10 @@ Complete [list of available pseudo-ops](src/pseudo_ops.cpp).
 	- Calculate the difference between the current position and the given label and output a 32-bit constant.
 - .string "String here!"
 	- Insert a zero-terminated string.
+- .strlen "String here!"
+	- Insert length of string as 32-bit constant. Useful with macro definition.
+- .ascii "String here!"
+	- Insert a string with no termination. Useful for for LUTs.
 
 Complete [list of available directives](src/directive.cpp).
 

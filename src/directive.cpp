@@ -71,6 +71,8 @@ void Assembler::directive(const Token& token)
 				size = sym.address() - 4 - loc.address(); /* NB: Forward */
 			sym.size = size;
 		});
+		/* NOTE: We add a length of zero here, and fix
+		   the actual output later on when length is known. */
 		add_output(OT_DATA, src, sizeof(size));
 
 	} else if (token.value == ".string") {
@@ -78,6 +80,15 @@ void Assembler::directive(const Token& token)
 		this->align_with_labels(0);
 		/* We want the zero-termination */
 		add_output(OT_DATA, str.value.data(), str.value.size()+1);
+	} else if (token.value == ".strlen") {
+		const auto& str = next<TK_STRING>();
+		const uint32_t size = str.value.size();
+		this->align_with_labels(alignof(decltype(size)));
+		add_output(OT_DATA, &size, sizeof(size));
+	} else if (token.value == ".ascii") {
+		const auto& str = next<TK_STRING>();
+		this->align_with_labels(0);
+		add_output(OT_DATA, str.value.data(), str.value.size());
 	} else {
 		fprintf(stderr, "Unknown directive: %s\n", token.value.c_str());
 	}

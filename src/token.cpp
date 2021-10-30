@@ -1,4 +1,18 @@
 #include "types.hpp"
+#include <cstring>
+
+Token::Token(const Token& other)
+	: type(other.type), line(other.line), value(other.value)
+{
+	switch (type) {
+	case TK_OPCODE:
+		opcode = other.opcode; break;
+	case TK_PSEUDOOP:
+		pseudoop = other.pseudoop; break;
+	default:
+		std::memcpy(raw, other.raw, sizeof(raw));
+	}
+}
 
 std::string Token::to_string() const
 {

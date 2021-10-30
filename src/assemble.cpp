@@ -304,7 +304,6 @@ Token Assembler::resolve_constants()
 }
 void Assembler::token_exception(const Token& tk, const std::string& info) const
 {
-	fprintf(stderr, "Problematic token on line %u. Info: %s\n", tk.line, info.c_str());
+	fprintf(stderr, "*** Problem on line %u: %s\n", tk.line, info.c_str());
 	throw std::runtime_error("Token: " + tk.to_string());
-
 }

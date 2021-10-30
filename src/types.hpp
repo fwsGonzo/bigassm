@@ -33,9 +33,9 @@ struct Opcode;
 struct PseudoOp;
 
 struct Token {
-	std::string value;
 	enum TokenType type;
 	uint32_t line = 0;
+	std::string value;
 	union {
 		address_t addr;
 		int64_t   i64;
@@ -53,7 +53,12 @@ struct Token {
 	std::string to_string() const;
 	static std::string to_string(TokenType);
 
-	Token(TokenType tt = TK_UNSPEC) : type(tt), addr(0) {}
+	Token(TokenType tt = TK_UNSPEC, uint32_t ln = 0)
+		: type(tt), line(ln), addr(0) {}
+	Token(const Token&);
+	Token& operator =(const Token& other) {
+		new(this) Token(other); return *this;
+	}
 };
 
 struct Assembler;

@@ -30,7 +30,9 @@ struct Assembler
 	const Token& next() {
 		const auto& tk = next();
 		if (tk.type != T) {
-			token_exception(tk, "argument");
+			token_exception(tk,
+				"Argument mismatch. Expected " + Token::to_string(T)
+				+ ", found " + Token::to_string(tk.type) + " instead.");
 		}
 		return tk;
 	}

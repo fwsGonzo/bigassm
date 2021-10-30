@@ -381,8 +381,14 @@ static Instruction op_imm_helper(Assembler& a, uint32_t opcode, uint32_t funct3)
 			(opcode == RV64I_OP_IMM32) ? RV64I_OP32 : RV128I_OP_IMM64;
 		instr.Rtype.rd  = reg.i64;
 		instr.Rtype.funct3 = funct3;
-		instr.Rtype.rs1 = reg.i64;
-		instr.Rtype.rs2 = reg2.i64;
+		if (a.next_is(TK_REGISTER)) {
+			auto& reg3 = a.next<TK_REGISTER> ();
+			instr.Rtype.rs1 = reg2.i64;
+			instr.Rtype.rs2 = reg3.i64;
+		} else {
+			instr.Rtype.rs1 = reg.i64;
+			instr.Rtype.rs2 = reg2.i64;
+		}
 	} else {
 		a.token_exception(a.next(), "Unexpected token");
 	}
