@@ -27,12 +27,10 @@ struct Assembler
 		return tokens->at(index++);
 	}
 	template <TokenType T>
-	const Token& next() {
+	const Token& next(const std::string& info = "") {
 		const auto& tk = next();
 		if (tk.type != T) {
-			token_exception(tk,
-				"Argument mismatch. Expected " + Token::to_string(T)
-				+ ", found " + Token::to_string(tk.type) + " instead.");
+			argument_mismatch(tk, T, info);
 		}
 		return tk;
 	}
@@ -78,6 +76,7 @@ struct Assembler
 	Instruction& instruction_at(SymbolLocation, size_t off = 0);
 
 	[[noreturn]] void token_exception(const Token&, const std::string&) const;
+	[[noreturn]] void argument_mismatch(const Token&, TokenType, const std::string&) const;
 
 	Assembler(const Options& opt);
 	const Options& options;

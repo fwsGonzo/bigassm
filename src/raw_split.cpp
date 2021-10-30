@@ -57,6 +57,7 @@ std::vector<RawToken> Assembler::split(const std::string& s)
 		else if (begin_comment) {
 			if (c == '\n') {
 				begin_comment = false;
+				line++;
 			}
 			continue;
 		}

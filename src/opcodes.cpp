@@ -390,7 +390,7 @@ static Instruction op_imm_helper(Assembler& a, uint32_t opcode, uint32_t funct3)
 			instr.Rtype.rs2 = reg2.i64;
 		}
 	} else {
-		a.token_exception(a.next(), "Unexpected token");
+		a.argument_mismatch(a.next(), TK_REGISTER, "Unexpected token");
 	}
 	return instr;
 }
@@ -420,6 +420,17 @@ static struct Opcode OP_MOV {
 	}
 };
 
+static struct Opcode OP_INC {
+	.handler = [] (Assembler& a) -> InstructionList {
+		auto& reg = a.next<TK_REGISTER> ();
+		Instruction instr(RV32I_OP_IMM);
+		instr.Itype.rd  = reg.i64;
+		instr.Itype.funct3 = 0x0;
+		instr.Itype.rs1 = reg.i64;
+		instr.Itype.imm = 1;
+		return {instr};
+	}
+};
 template <unsigned Opcode>
 static struct Opcode OP_ADD {
 	.handler = [] (Assembler& a) -> InstructionList {
@@ -586,6 +597,7 @@ static const std::unordered_map<std::string, Opcode> opcode_list =
 	{"ret", OP_RET},
 	{"jmp", OP_JMP},
 
+	{"inc", OP_INC},
 	{"add", OP_ADD<RV32I_OP_IMM>},
 	{"sub", OP_SUB<RV32I_OP>},
 	{"sll", OP_SLL<RV32I_OP_IMM>},

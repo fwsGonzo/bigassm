@@ -1,6 +1,7 @@
 #include "assembler.hpp"
 #include "opcodes.hpp"
 #include "pseudo_ops.hpp"
+#include "registers.hpp"
 #include <cassert>
 
 Assembler::Assembler(const Options& opt)
@@ -306,4 +307,14 @@ void Assembler::token_exception(const Token& tk, const std::string& info) const
 {
 	fprintf(stderr, "*** Problem on line %u: %s\n", tk.line, info.c_str());
 	throw std::runtime_error("Token: " + tk.to_string());
+}
+void Assembler::argument_mismatch(const Token& tk, TokenType T, const std::string& info) const
+{
+	if (T == TK_REGISTER) {
+		Registers::print_all();
+	}
+	token_exception(tk,
+		"Argument mismatch. Expected " + Token::to_string(T)
+		+ ", found " + Token::to_string(tk.type) + " instead."
+		+ info);
 }

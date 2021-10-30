@@ -1,7 +1,7 @@
 #include "registers.hpp"
-#include <unordered_map>
+#include <map>
 
-static const std::unordered_map<std::string, uint8_t> reg_list =
+static const std::map<std::string, uint8_t> reg_list =
 {
 	{"zero",0}, {"ra",  1}, {"sp",  2}, {"gp",  3},
 	{"tp",  4}, {"t0",  5}, {"t1",  6}, {"t2",  7},
@@ -37,4 +37,16 @@ Token Registers::to_reg(const std::string& value)
 	}
 	tk.type = TK_SYMBOL;
 	return tk;
+}
+
+void Registers::print_all()
+{
+	fprintf(stderr, "All available registers:\n");
+	const size_t size = reg_list.size();
+	size_t i = 0;
+	for (const auto& it : reg_list) {
+		fprintf(stderr, "%s ", it.first.c_str());
+		if (i > 0 && i % 4 == 0) fprintf(stderr, "\n");
+		i++;
+	}
 }
