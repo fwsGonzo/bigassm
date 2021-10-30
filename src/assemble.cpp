@@ -45,6 +45,7 @@ void Assembler::assemble(const std::vector<Token>& tv,
 		case TK_SYMBOL:
 		case TK_REGISTER:
 		case TK_CONSTANT:
+		case TK_OPERATOR:
 		case TK_UNSPEC:
 			fprintf(stderr, "Unexpected token %s at line %u\n",
 				token.to_string().c_str(), token.line);
@@ -200,6 +201,107 @@ void Assembler::make_global(const std::string& name)
 	m_globals.insert(name);
 }
 
+Token Assembler::resolve_constants()
+{
+	auto& imm = this->next <TK_CONSTANT> ();
+	Token sum {imm};
+	enum {
+		NONE,
+		ADD,
+		SUB,
+		MUL,
+		DIV,
+		SHR,
+		SHL,
+		MOD,
+		AND,
+		OR,
+		XOR,
+	} ops {NONE};
+
+	bool is_negated = false;
+
+	while (next_is(TK_CONSTANT) || next_is(TK_OPERATOR)) {
+		if (next_is(TK_CONSTANT)) {
+			auto& tk = next <TK_CONSTANT> ();
+
+			auto value = tk.u128;
+			if (is_negated) {
+				is_negated = false;
+				value = ~value;
+			}
+
+			switch (ops) {
+			case ADD:
+				sum.u128 = sum.u128 + value;
+				break;
+			case SUB:
+				sum.u128 = sum.u128 - value;
+				break;
+			case MUL:
+				sum.u128 = sum.u128 * value;
+				break;
+			case DIV:
+				sum.u128 = sum.u128 / value;
+				break;
+			case SHR:
+				sum.u128 = sum.u128 >> value;
+				break;
+			case SHL:
+				sum.u128 = sum.u128 << value;
+				break;
+			case MOD:
+				sum.u128 = sum.u128 % value;
+				break;
+			case AND:
+				sum.u128 = sum.u128 & value;
+				break;
+			case OR:
+				sum.u128 = sum.u128 | value;
+				break;
+			case XOR:
+				sum.u128 = sum.u128 ^ value;
+				break;
+			case NONE:
+			default:
+				token_exception(tk, "Unexpected constant");
+				break;
+			}
+		} else if (next_is(TK_OPERATOR)) {
+			auto& tk = next <TK_OPERATOR> ();
+			if (tk.value == "~") {
+				is_negated = !is_negated;
+			} else {
+				if (ops != NONE)
+					token_exception(tk, "Unexpected operator");
+				if (tk.value == "+")
+					ops = ADD;
+				else if (tk.value == "-")
+					ops = SUB;
+				else if (tk.value == "*")
+					ops = MUL;
+				else if (tk.value == "/")
+					ops = DIV;
+				else if (tk.value == ">>")
+					ops = SHR;
+				else if (tk.value == "<<")
+					ops = SHL;
+				else if (tk.value == "%")
+					ops = MOD;
+				else if (tk.value == "&")
+					ops = AND;
+				else if (tk.value == "|")
+					ops = OR;
+				else if (tk.value == "^")
+					ops = XOR;
+				else token_exception(tk,
+					"Unknown operator: " + tk.value);
+			}
+		}
+	}
+
+	return sum;
+}
 void Assembler::token_exception(const Token& tk, const std::string& info) const
 {
 	fprintf(stderr, "Problematic token on line %u. Info: %s\n", tk.line, info.c_str());

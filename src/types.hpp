@@ -20,6 +20,7 @@ enum TokenType {
 	TK_PSEUDOOP,
 	TK_REGISTER,
 	TK_CONSTANT,
+	TK_OPERATOR,
 	TK_UNSPEC,
 };
 

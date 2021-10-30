@@ -49,7 +49,7 @@ static struct Opcode OP_NOP {
 static struct Opcode OP_LI {
 	.handler = [] (Assembler& a) -> InstructionList {
 		auto& reg = a.next<TK_REGISTER> ();
-		auto& imm = a.next<TK_CONSTANT> ();
+		auto imm = a.resolve_constants();
 
 		InstructionList res;
 		build_uint32(res, reg.i64, imm.i64);
@@ -61,7 +61,7 @@ static struct Opcode OP_SET {
 		InstructionList res;
 		auto& dst = a.next<TK_REGISTER> ();
 		auto& temp = a.next<TK_REGISTER> ();
-		auto& imm = a.next<TK_CONSTANT> ();
+		auto imm = a.resolve_constants();
 		/* When the constant is 32-bits */
 		if (imm.u128 < 0x100000000) {
 			build_uint32(res, dst.i64, imm.i64);
@@ -139,7 +139,7 @@ static InstructionList load_helper(Assembler& a, uint32_t f3)
 	i1.Itype.funct3 = f3;
 	i1.Itype.rs1 = src.i64;
 	if (a.next_is(TK_CONSTANT)) {
-		auto& imm = a.next<TK_CONSTANT> ();
+		auto imm = a.resolve_constants();
 		i1.Itype.imm = imm.i64;
 	}
 	auto& dst = a.next<TK_REGISTER> ();
@@ -201,7 +201,7 @@ static InstructionList store_helper(Assembler& a, uint32_t f3)
 	i1.Stype.funct3 = f3;
 	i1.Stype.rs2 = src.i64;
 	if (a.next_is(TK_CONSTANT)) {
-		auto& imm = a.next<TK_CONSTANT> ();
+		auto imm = a.resolve_constants();
 		i1.Stype.imm1 = imm.i64;
 		i1.Stype.imm2 = imm.i64 >> 5;
 		}
@@ -365,7 +365,7 @@ static Instruction op_imm_helper(Assembler& a, uint32_t opcode, uint32_t funct3)
 	auto& reg = a.next<TK_REGISTER> ();
 	Instruction instr(opcode);
 	if (a.next_is(TK_CONSTANT)) {
-		auto& imm = a.next<TK_CONSTANT> ();
+		auto imm = a.resolve_constants();
 		if (imm.i64 > 0x7FF || imm.i64 < -2048)
 			a.token_exception(imm, "Out of bounds immediate value");
 
@@ -400,6 +400,19 @@ static Instruction op_f7_helper(Assembler& a, uint32_t opcode, uint32_t f3, uint
 	instr.Rtype.funct7 = f7;
 	return instr;
 }
+
+static struct Opcode OP_MOV {
+	.handler = [] (Assembler& a) -> InstructionList {
+		auto& reg = a.next<TK_REGISTER> ();
+		Instruction instr(RV32I_OP);
+		auto& reg2 = a.next<TK_REGISTER> ();
+		instr.Rtype.rd  = reg.i64;
+		instr.Rtype.funct3 = 0x0;
+		instr.Rtype.rs1 = reg2.i64;
+		instr.Rtype.rs2 = 0;
+		return {instr};
+	}
+};
 
 template <unsigned Opcode>
 static struct Opcode OP_ADD {
@@ -489,7 +502,7 @@ static struct Opcode OP_REMU {
 
 static struct Opcode OP_SYSCALL {
 	.handler = [] (Assembler& a) -> InstructionList {
-		auto& imm = a.next<TK_CONSTANT> ();
+		auto imm = a.resolve_constants();
 		Instruction i1(RV32I_OP_IMM);
 		i1.Itype.rd = 17;
 		i1.Itype.imm = imm.i64;
@@ -519,8 +532,8 @@ static struct Opcode OP_WFI {
 };
 static struct Opcode OP_SYSTEM {
 	.handler = [] (Assembler& a) -> InstructionList {
-		auto& f3  = a.next<TK_CONSTANT> ();
-		auto& imm = a.next<TK_CONSTANT> ();
+		auto f3  = a.resolve_constants();
+		auto imm = a.resolve_constants();
 		Instruction instr(RV32I_SYSTEM);
 		instr.Itype.funct3 = f3.i64;
 		instr.Itype.imm = imm.i64;
@@ -534,6 +547,8 @@ static const std::unordered_map<std::string, Opcode> opcode_list =
 	{"set", OP_SET},
 	{"li", OP_LI},
 	{"la", OP_LA},
+	{"mv", OP_MOV},
+	{"mov", OP_MOV},
 
 	{"lb", OP_LB},
 	{"lh", OP_LH},

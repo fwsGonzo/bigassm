@@ -38,6 +38,7 @@ struct Assembler
 		if (done()) return false;
 		return tokens->at(index).type == tt;
 	}
+	Token resolve_constants();
 	bool done() const noexcept { return index >= tokens->size(); }
 
 	bool is_aligned(size_t alignment) {

@@ -5,6 +5,12 @@
 #include <stdexcept>
 extern Token pseudo_op(const std::string&);
 
+static bool is_operator(const std::string& word) {
+	return word == "+" || word == "-" || word == "*" || word == "/"
+		|| word == "<<" || word == ">>" || word == "%"
+		|| word == "|" || word == "&" || word == "^"
+		|| word == "~";
+}
 static bool is_number(char c) {
 	return (c == '-' || c == '+' || (c >= '0' && c <= '9'));
 }
@@ -28,6 +34,15 @@ Assembler::parse(const std::vector<RawToken>& raw_tokens)
 		} else if (word[0] == '"') {
 			tk.type = TK_STRING;
 			tk.value = word.substr(1, word.size() - 2);
+		} else if (word[0] == '\'') {
+			if (word.size() > 2 && word[2] == '\'') {
+				tk.type = TK_CONSTANT;
+				tk.u64 = word[1];
+			} else throw std::runtime_error(
+				"Invalid character constant: " + word + ". Missing quote?");
+		} else if (is_operator(word)) {
+			tk.type = TK_OPERATOR;
+			tk.value = word;
 		} else if (is_number(word[0])) {
 			if (word.size() > 2 && word[1] == 'x') {
 				if (word.size() > 18) {
