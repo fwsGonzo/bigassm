@@ -78,15 +78,17 @@ The store is pretty useless, but it shows how to do a SP-relative store.
 	- Create a new label named 'my_label' which can be jumped to.
 - li [dst], constant
 	- Loads integer constant into register 'dst'.
-- set [dst], [tmp], constant
-	- Loads up to 128-bit constant into 'dst' using 'tmp' as intermediate register. Uses many instructions.
+- set [dst], [reg], constant
+	- Loads up to 128-bit constant into 'dst' using 'reg' as intermediate register. Uses many instructions.
 - la [dst], label
 	- Loads address at label into register 'dst'. Supports relative 128-bit addresses if the label is +/-2GB. Supports absolute +/- 2GB address.
+- laq [dst], [reg], label
+	- Loads up to 128-bit label into 'dst' using 'reg' as intermediate register. Uses many instructions.
 - lq [dst], [reg]+offset
 	- Load 128-bit value from [reg]+offset memory address.
 	- Other sizes: lb (8-bit), lh (16-bit), lw (32-bit), ld (64-bit).
 	- Unsigned: lbu (8-bit), lhu (16-bit), lwu (32-bit), ldu (64-bit).
-- sq [reg]+offset, [dst]
+- sq [dst], [reg]+offset
 	- Store 128-bit value into [reg]+offset memory address.
 	- Other sizes: sb (8-bit), sh (16-bit), sw (32-bit), sd (64-bit).
 - call label

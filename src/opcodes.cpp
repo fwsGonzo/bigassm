@@ -18,6 +18,15 @@ static void bounds_check_jump(Assembler& a, int64_t diff)
 	}
 }
 
+static void set_uint32(Assembler& a,
+	const SymbolLocation& loc, uint32_t offset, int32_t value)
+{
+	auto& i1 = a.instruction_at(loc, offset+0);
+	auto& i2 = a.instruction_at(loc, offset+4);
+	i2.Itype.imm = value;
+	i1.Utype.imm = (value + i2.Itype.imm) >> 12;
+}
+
 static void build_uint32(
 	InstructionList& res, int reg, int32_t value)
 {
@@ -131,19 +140,57 @@ static struct Opcode OP_LA {
 		return {i1, i2};
 	}
 };
+static struct Opcode OP_LAQ {
+	.handler = [] (Assembler& a) -> InstructionList {
+		InstructionList res;
+		auto& dst = a.next<TK_REGISTER> ();
+		auto& temp = a.next<TK_REGISTER> ();
+		auto& label = a.next<TK_SYMBOL> ();
+
+		a.schedule(label,
+		[loc = a.current_location()] (Assembler& a, auto&, auto& sym) {
+			set_uint32(a, loc, 0, sym.address() >> 96);
+			set_uint32(a, loc, 2*4, sym.address() >> 64);
+			set_uint32(a, loc, 6*4, sym.address() >> 32);
+			set_uint32(a, loc, 10*4, sym.address() >> 0);
+		});
+
+		/* Large constants using intermediate register */
+		build_uint32(res, dst.i64, 0x7FFFFFFF);
+
+		for (int i = 0; i < 3; i++)
+		{
+			build_uint32(res, temp.i64, 0x7FFFFFFF);
+			/* dst <<= 32 */
+			Instruction i3(RV32I_OP_IMM);
+			i3.Itype.rd  = dst.i64;
+			i3.Itype.rs1 = dst.i64;
+			i3.Itype.funct3 = 0x1;
+			i3.Itype.imm = 32;
+			res.push_back(i3);
+			/* dst += temp */
+			Instruction i4(RV32I_OP);
+			i4.Rtype.rd  = dst.i64;
+			i4.Rtype.rs1 = dst.i64;
+			i4.Rtype.rs2 = temp.i64;
+			res.push_back(i4);
+		}
+		return res;
+	}
+};
 
 static InstructionList load_helper(Assembler& a, uint32_t f3)
 {
-	auto& src = a.next<TK_REGISTER> ();
 	Instruction i1(RV32I_LOAD);
+	auto& dst = a.next<TK_REGISTER> ();
+	i1.Itype.rd  = dst.i64;
 	i1.Itype.funct3 = f3;
+	auto& src = a.next<TK_REGISTER> ();
 	i1.Itype.rs1 = src.i64;
 	if (a.next_is(TK_CONSTANT)) {
 		auto imm = a.resolve_constants();
 		i1.Itype.imm = imm.i64;
 	}
-	auto& dst = a.next<TK_REGISTER> ();
-	i1.Itype.rd  = dst.i64;
 	return {i1};
 }
 static struct Opcode OP_LB {
@@ -194,11 +241,11 @@ static struct Opcode OP_LQ {
 
 static InstructionList store_helper(Assembler& a, uint32_t f3)
 {
-	auto& src = a.next<TK_REGISTER> ();
-	auto& dst = a.next<TK_REGISTER> ();
 	Instruction i1(RV32I_STORE);
-	i1.Stype.rs1 = dst.i64;
 	i1.Stype.funct3 = f3;
+	auto& dst = a.next<TK_REGISTER> ();
+	i1.Stype.rs1 = dst.i64;
+	auto& src = a.next<TK_REGISTER> ();
 	i1.Stype.rs2 = src.i64;
 	if (a.next_is(TK_CONSTANT)) {
 		auto imm = a.resolve_constants();
@@ -401,8 +448,14 @@ static Instruction op_f7_helper(Assembler& a, uint32_t opcode, uint32_t f3, uint
 	Instruction instr(opcode);
 	instr.Rtype.rd  = reg.i64;
 	instr.Rtype.funct3 = f3;
-	instr.Rtype.rs1 = reg.i64;
-	instr.Rtype.rs2 = reg2.i64;
+	if (a.next_is(TK_REGISTER)) {
+		auto& reg3 = a.next<TK_REGISTER> ();
+		instr.Rtype.rs1 = reg2.i64;
+		instr.Rtype.rs2 = reg3.i64;
+	} else {
+		instr.Rtype.rs1 = reg.i64;
+		instr.Rtype.rs2 = reg2.i64;
+	}
 	instr.Rtype.funct7 = f7;
 	return instr;
 }
@@ -564,6 +617,7 @@ static const std::unordered_map<std::string, Opcode> opcode_list =
 	{"set", OP_SET},
 	{"li", OP_LI},
 	{"la", OP_LA},
+	{"laq", OP_LAQ},
 	{"mv", OP_MOV},
 	{"mov", OP_MOV},
 
