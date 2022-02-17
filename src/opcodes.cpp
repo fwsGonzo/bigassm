@@ -354,19 +354,33 @@ static struct Opcode OP_FARCALL {
 };
 static struct Opcode OP_CALL {
 	.handler = [] (Assembler& a) -> InstructionList {
-		auto& lbl = a.next<TK_SYMBOL> ();
 		Instruction instr(RV32I_JAL);
 		instr.Jtype.rd = 1; /* Return address */
-		a.schedule(lbl,
-		[loc = a.current_location()] (Assembler& a, auto&, auto& sym) {
-			auto& instr = a.instruction_at(loc);
-			const int64_t diff = sym.address() - loc.address();
-			bounds_check_jump(a, diff);
-			instr.Jtype.imm3 = diff >> 1;
-			instr.Jtype.imm2 = diff >> 11;
-			instr.Jtype.imm1 = diff >> 12;
-			instr.Jtype.imm4 = diff >> 19;
-		});
+		if (a.next_is(TK_SYMBOL)) {
+			auto& lbl = a.next<TK_SYMBOL> ();
+			a.schedule(lbl,
+			[loc = a.current_location()] (Assembler& a, auto&, auto& sym) {
+				auto& instr = a.instruction_at(loc);
+				const int64_t diff = sym.address() - loc.address();
+				bounds_check_jump(a, diff);
+				instr.Jtype.imm3 = diff >> 1;
+				instr.Jtype.imm2 = diff >> 11;
+				instr.Jtype.imm1 = diff >> 12;
+				instr.Jtype.imm4 = diff >> 19;
+			});
+		} else if (a.next_is(TK_CONSTANT)) {
+			auto& imm = a.next<TK_CONSTANT> ();
+			instr.Jtype.imm3 = imm.i64 >> 1;
+			instr.Jtype.imm2 = imm.i64 >> 11;
+			instr.Jtype.imm1 = imm.i64 >> 12;
+			instr.Jtype.imm4 = imm.i64 >> 19;
+		} else {
+			a.token_exception(a.next(), "Unexpected next token");
+		}
+		if (a.next_is(TK_REGISTER)) {
+			auto& reg = a.next<TK_REGISTER> ();
+			instr.Jtype.rd = reg.i64;
+		}
 		return {instr};
 	}
 };
