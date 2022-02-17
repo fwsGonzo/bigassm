@@ -372,9 +372,15 @@ static struct Opcode OP_CALL {
 };
 static struct Opcode OP_JALR {
 	.handler = [] (Assembler& a) -> InstructionList {
-		auto& reg1 = a.next<TK_REGISTER> ();
 		Instruction instr(RV32I_JALR);
-		instr.Itype.rs1 = reg1.i64;
+		if (a.next_is(TK_REGISTER)) {
+			auto& reg1 = a.next<TK_REGISTER> ();
+			instr.Itype.rs1 = reg1.i64;
+		}
+		if (a.next_is(TK_CONSTANT)) {
+			auto& imm = a.next<TK_CONSTANT> ();
+			instr.Itype.imm = imm.i64;
+		}
 		if (a.next_is(TK_REGISTER)) {
 			auto& reg2 = a.next<TK_REGISTER> ();
 			instr.Itype.rd = reg2.i64;
