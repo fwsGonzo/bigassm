@@ -185,12 +185,12 @@ static InstructionList load_helper(Assembler& a, uint32_t f3)
 	auto& dst = a.next<TK_REGISTER> ();
 	i1.Itype.rd  = dst.i64;
 	i1.Itype.funct3 = f3;
-	auto& src = a.next<TK_REGISTER> ();
-	i1.Itype.rs1 = src.i64;
 	if (a.next_is(TK_CONSTANT)) {
 		auto imm = a.resolve_constants();
 		i1.Itype.imm = imm.i64;
 	}
+	auto& src = a.next<TK_REGISTER> ();
+	i1.Itype.rs1 = src.i64;
 	return {i1};
 }
 static struct Opcode OP_LB {
