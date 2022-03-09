@@ -30,14 +30,8 @@ int main(int argc, char** argv)
 	{
 		const std::string infile = argv[1];
 		auto input = load_file(infile);
-		auto raw_tokens = Assembler::split(input);
+		auto tokens = Assembler::split(input);
 
-		if constexpr (VERBOSE_WORDS) {
-			for (const auto& rt : raw_tokens)
-				printf("Word: %s\n", rt.name.c_str());
-		}
-
-		auto tokens = Assembler::parse(raw_tokens);
 		if constexpr (VERBOSE_TOKENS) {
 			for (auto& token : tokens)
 				printf("Token: %s\n", token.to_string().c_str());

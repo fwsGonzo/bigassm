@@ -17,8 +17,8 @@ struct Assembler
 {
 	using scheduled_op_t = std::function<void(Assembler&, const std::string&, SymbolLocation&)>;
 
-	static std::vector<RawToken> split(const std::string&);
-	static std::vector<Token> parse(const std::vector<RawToken>&);
+	static std::vector<Token> split(const std::string&);
+	static Token parse(const RawToken&);
 
 	void assemble(const std::vector<Token>&, const char* rpath);
 	void finish();

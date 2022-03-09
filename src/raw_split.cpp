@@ -3,7 +3,7 @@
 
 #define FLUSH_WORD() \
 	if (!word.empty()) {	\
-		tokens.push_back({word, line});	\
+		tokens.push_back(Assembler::parse({word, line}));	\
 		word.clear();	\
 	}
 
@@ -24,9 +24,9 @@ static char escape_character(char echar)
 	}
 }
 
-std::vector<RawToken> Assembler::split(const std::string& s)
+std::vector<Token> Assembler::split(const std::string& s)
 {
-	std::vector<RawToken> tokens;
+	std::vector<Token> tokens;
 
 	std::string word;
 	uint32_t line = 1;
@@ -48,7 +48,7 @@ std::vector<RawToken> Assembler::split(const std::string& s)
 			}
 			word.append(1, c);
 			if (c == '"' && !is_escaped) {
-				tokens.push_back({word, line});
+				tokens.push_back(Assembler::parse({word, line}));
 				word.clear();
 				begin_quotes = false;
 			}
@@ -91,7 +91,7 @@ std::vector<RawToken> Assembler::split(const std::string& s)
 		}
 	}
 	if (!word.empty())
-		tokens.push_back({word, line});
+		tokens.push_back(Assembler::parse({word, line}));
 
     return tokens;
 }

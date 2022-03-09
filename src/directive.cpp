@@ -24,8 +24,7 @@ void Assembler::directive(const Token& token)
 	} else if (token.value == ".include") {
 		const auto& sym = next<TK_STRING>();
 		auto contents = load_file(sym.value, m_realpath);
-		auto raw_tokens = Assembler::split(contents);
-		auto tokens = Assembler::parse(raw_tokens);
+		auto tokens = Assembler::split(contents);
 		const char* rpath = get_realpath(sym.value.c_str());
 		this->assemble(tokens, rpath);
 	} else if (token.value == ".section") {
