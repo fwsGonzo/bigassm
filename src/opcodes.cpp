@@ -483,12 +483,11 @@ static Instruction op_f7_helper(Assembler& a, uint32_t opcode, uint32_t f3, uint
 static struct Opcode OP_MOV {
 	.handler = [] (Assembler& a) -> InstructionList {
 		auto& reg = a.next<TK_REGISTER> ();
-		Instruction instr(RV32I_OP);
+		Instruction instr(RV32I_OP_IMM);
 		auto& reg2 = a.next<TK_REGISTER> ();
-		instr.Rtype.rd  = reg.i64;
-		instr.Rtype.funct3 = 0x0;
-		instr.Rtype.rs1 = reg2.i64;
-		instr.Rtype.rs2 = 0;
+		instr.Itype.funct3 = 0x0;
+		instr.Itype.rd  = reg.i64;
+		instr.Itype.rs1 = reg2.i64;
 		return {instr};
 	}
 };
@@ -592,17 +591,23 @@ static struct Opcode OP_REMU {
 
 static struct Opcode OP_SYSCALL {
 	.handler = [] (Assembler& a) -> InstructionList {
+		// LI a7, <const>
+		// ECALL
 		auto imm = a.resolve_constants();
 		Instruction i1(RV32I_OP_IMM);
 		i1.Itype.rd = 17;
 		i1.Itype.imm = imm.i64;
 		Instruction i2(RV32I_SYSTEM);
+		i2.Itype.funct3 = 0x0;
+		i2.Itype.imm = 0x0;
 		return {i1, i2};
 	}
 };
 static struct Opcode OP_ECALL {
 	.handler = [] (Assembler&) -> InstructionList {
 		Instruction instr(RV32I_SYSTEM);
+		instr.Itype.funct3 = 0x0;
+		instr.Itype.imm = 0x0;
 		return {instr};
 	}
 };
