@@ -8,11 +8,11 @@ extern "C" {
 #include <stdint.h>
 #include "elf.h"
 
-typedef uint16_t    Elf128_Half;
-typedef uint32_t    Elf128_Word;
-typedef uint64_t    Elf128_Xword;
-typedef uint64_t    Elf128_Off;
-typedef __uint128_t Elf128_Addr;
+typedef uint16_t     Elf128_Half;
+typedef uint32_t     Elf128_Word;
+typedef __uint128_t  Elf128_Xword;
+typedef __uint128_t  Elf128_Off;
+typedef __uint128_t  Elf128_Addr;
 
 #define ELFCLASS128  3
 
